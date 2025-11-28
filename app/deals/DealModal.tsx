@@ -1,0 +1,301 @@
+'use client'
+
+import { useEffect } from 'react'
+
+interface Deal {
+  id: string
+  provider: string
+  buyer: string
+  modality: string
+  dataType: string | null
+  priceUsd: number | null
+  priceRangeMinUsd: number | null
+  priceRangeMaxUsd: number | null
+  reportedTerms: string | null
+  exclusive: boolean | null
+  creatorsCompensated: boolean | null
+  creatorSplitPercentage: number | null
+  revenueShare: boolean | null
+  date: string | null
+  dealType: string | null
+  pricingMechanism: string | null
+  sourcePrimary: string | null
+  trainingAllowed: boolean | null
+  finetuningAllowed: boolean | null
+  inferenceAllowed: boolean | null
+  redistributionAllowed: boolean | null
+  deletionRequired: boolean | null
+  notes: string | null
+  sources: string | null
+  pricingNormalizations?: Array<{
+    unitType: string
+    normalizedCostPerUnit: number
+    normalizationMethod: string
+  }>
+}
+
+interface DealModalProps {
+  deal: Deal | null
+  isOpen: boolean
+  onClose: () => void
+}
+
+function formatPrice(deal: Deal) {
+  if (deal.priceUsd) {
+    if (deal.priceUsd >= 1000000000) {
+      return `$${(deal.priceUsd / 1000000000).toFixed(1)}B`
+    }
+    if (deal.priceUsd >= 1000000) {
+      return `$${(deal.priceUsd / 1000000).toFixed(0)}M`
+    }
+    if (deal.priceUsd >= 1000) {
+      return `$${(deal.priceUsd / 1000).toFixed(0)}K`
+    }
+    return `$${deal.priceUsd.toFixed(0)}`
+  }
+  if (deal.priceRangeMinUsd && deal.priceRangeMaxUsd) {
+    return `$${deal.priceRangeMinUsd.toFixed(2)}–${deal.priceRangeMaxUsd.toFixed(2)}`
+  }
+  return deal.reportedTerms || 'Undisclosed'
+}
+
+export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
+  if (!isOpen || !deal) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-surface rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-surface border-b border-border px-6 py-4 flex items-start justify-between">
+          <div className="flex-1">
+            <h2 className="text-2xl font-semibold mb-1">
+              {deal.provider} → {deal.buyer}
+            </h2>
+            <p className="text-text-muted">{deal.dataType || deal.modality}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-text-muted hover:text-text text-2xl leading-none ml-4"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Summary Card */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6 border-b border-border">
+            <div>
+              <div className="text-sm text-text-muted mb-1">Price</div>
+              <div className="text-xl font-semibold">{formatPrice(deal)}</div>
+            </div>
+            <div>
+              <div className="text-sm text-text-muted mb-1">Deal Type</div>
+              <div className="font-medium">{deal.dealType || deal.pricingMechanism || '—'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-text-muted mb-1">Date</div>
+              <div className="font-medium">{deal.date || '—'}</div>
+            </div>
+            <div>
+              <div className="text-sm text-text-muted mb-1">Source</div>
+              <div className="font-medium">{deal.sourcePrimary || '—'}</div>
+            </div>
+          </div>
+
+          {/* Reported Terms */}
+          {deal.reportedTerms && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Reported Terms</h3>
+              <p className="text-text-muted leading-relaxed">{deal.reportedTerms}</p>
+            </div>
+          )}
+
+          {/* Rights & Compensation */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Rights Granted</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Training</span>
+                  <span>{deal.trainingAllowed !== null ? (deal.trainingAllowed ? 'Yes' : 'No') : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Fine-tuning</span>
+                  <span>{deal.finetuningAllowed !== null ? (deal.finetuningAllowed ? 'Yes' : 'No') : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Inference</span>
+                  <span>{deal.inferenceAllowed !== null ? (deal.inferenceAllowed ? 'Yes' : 'No') : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Redistribution</span>
+                  <span>{deal.redistributionAllowed !== null ? (deal.redistributionAllowed ? 'Yes' : 'No') : '—'}</span>
+                </div>
+                {deal.deletionRequired && (
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Deletion Required</span>
+                    <span>Yes</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Creator Compensation</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-text-muted">Compensated</span>
+                  <span>
+                    {deal.creatorsCompensated === true ? (
+                      <span className="badge badge-primary">Yes</span>
+                    ) : deal.creatorsCompensated === false ? (
+                      'No'
+                    ) : (
+                      'Unclear'
+                    )}
+                  </span>
+                </div>
+                {deal.creatorSplitPercentage && (
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Split</span>
+                    <span>{deal.creatorSplitPercentage}%</span>
+                  </div>
+                )}
+                {deal.revenueShare && (
+                  <div className="flex justify-between">
+                    <span className="text-text-muted">Revenue Share</span>
+                    <span>Yes</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Normalizations */}
+          {(() => {
+            const normalizations = deal.pricingNormalizations || []
+            if (normalizations.length > 0) {
+              return (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Pricing Normalizations</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {normalizations.map((norm, idx) => (
+                      <div key={idx} className="border border-border-subtle rounded p-3">
+                        <div className="text-xs text-text-muted mb-1">Per {norm.unitType}</div>
+                        <div className="font-medium">
+                          {norm.normalizedCostPerUnit < 0.001
+                            ? `$${(norm.normalizedCostPerUnit * 1000000).toFixed(2)}/1M`
+                            : norm.normalizedCostPerUnit < 1
+                            ? `$${norm.normalizedCostPerUnit.toFixed(4)}`
+                            : `$${norm.normalizedCostPerUnit.toFixed(2)}`}
+                        </div>
+                        <div className="text-xs text-text-muted mt-1">
+                          {norm.normalizationMethod}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            }
+            return null
+          })()}
+
+          {/* Notes */}
+          {deal.notes && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Notes</h3>
+              <p className="text-text-muted leading-relaxed">{deal.notes}</p>
+            </div>
+          )}
+
+          {/* Sources */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Sources</h3>
+            <div className="space-y-2">
+              {deal.sourcePrimary && (
+                <div className="text-text-muted">
+                  Primary: <span className="text-text font-medium">{deal.sourcePrimary}</span>
+                </div>
+              )}
+              {deal.sources && (() => {
+                try {
+                  const sourcesArray = JSON.parse(deal.sources)
+                  if (Array.isArray(sourcesArray) && sourcesArray.length > 0) {
+                    return (
+                      <div>
+                        <div className="text-text-muted mb-2">Additional sources:</div>
+                        <ul className="list-disc list-inside space-y-1">
+                          {sourcesArray.map((source: string, idx: number) => (
+                            <li key={idx}>
+                              <a
+                                href={source}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-accent hover:text-accent-hover break-all"
+                              >
+                                {source}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )
+                  }
+                } catch (e) {
+                  // If not valid JSON, treat as plain string
+                  if (deal.sources) {
+                    return (
+                      <div>
+                        <a
+                          href={deal.sources}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent hover:text-accent-hover break-all"
+                        >
+                          {deal.sources}
+                        </a>
+                      </div>
+                    )
+                  }
+                }
+                return null
+              })()}
+              {!deal.sourcePrimary && (!deal.sources || (deal.sources && JSON.parse(deal.sources || '[]').length === 0)) && (
+                <div className="text-text-muted">No sources available</div>
+              )}
+            </div>
+          </div>
+
+          {/* Modality Badge */}
+          <div className="pt-4 border-t border-border">
+            <span className="badge badge-secondary">{deal.modality}</span>
+            {deal.exclusive && (
+              <span className="badge badge-primary ml-2">Exclusive</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
