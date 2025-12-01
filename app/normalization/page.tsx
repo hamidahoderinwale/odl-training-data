@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { convertCurrency, extractDateForConversion } from '@/lib/currency'
 
 async function getDealsForNormalization() {
   const deals = await prisma.deal.findMany({
@@ -9,50 +10,93 @@ async function getDealsForNormalization() {
         { priceRangeMinUsd: { not: null } },
       ],
     },
+    select: {
+      id: true,
+      provider: true,
+      buyer: true,
+      modality: true,
+      priceUsd: true,
+      priceRangeMinUsd: true,
+      priceRangeMaxUsd: true,
+      priceCurrency: true,
+      reportedTerms: true,
+      date: true,
+      notes: true,
+      dealType: true,
+      dataType: true,
+      pricingNormalizations: {
+        select: {
+          unitType: true,
+          normalizedCostPerUnit: true,
+          normalizationMethod: true,
+        },
+      },
+    },
     orderBy: { priceUsd: 'desc' },
   })
   return deals
 }
 
-function normalizePrice(deal: any, unitType: string): number | null {
-  // This is a simplified normalization - in production, you'd have
-  // more sophisticated logic based on data type and assumptions
+async function convertToUSD(
+  amount: number | null,
+  currency: string | null,
+  date: string | null
+): Promise<number | null> {
+  if (!amount || !currency || currency.toUpperCase() === 'USD') {
+    return amount
+  }
+
+  const conversionDate = extractDateForConversion(date)
+  const converted = await convertCurrency(amount, currency, 'USD', conversionDate || undefined)
+  return converted
+}
+
+async function getNormalizedPrice(deal: any, unitType: string): Promise<number | null> {
+  // First, check if we have a stored normalization
+  if (deal.pricingNormalizations) {
+    const stored = deal.pricingNormalizations.find((n: any) => n.unitType === unitType)
+    if (stored) {
+      return stored.normalizedCostPerUnit
+    }
+  }
   
-  if (!deal.priceUsd) return null
+  // Convert price to USD if needed
+  const priceUsd = await convertToUSD(
+    deal.priceUsd || deal.priceRangeMinUsd,
+    deal.priceCurrency || 'USD',
+    deal.date
+  )
+  
+  if (!priceUsd) return null
   
   switch (unitType) {
     case 'token':
-      // Rough estimate: 1 book ≈ 80k tokens, 1 article ≈ 1k tokens
       if (deal.modality === 'Text') {
         if (deal.dataType?.toLowerCase().includes('book')) {
-          return deal.priceUsd / 80000 // per token
+          return priceUsd / 80000
         }
-        return deal.priceUsd / 1000 // per token (article estimate)
+        return priceUsd / 1000
       }
       return null
       
     case 'record':
-      // For per-unit deals, try to extract from reported terms
       if (deal.dealType === 'per-unit') {
-        // This would need more sophisticated parsing
-        return deal.priceUsd / 1000000 // rough estimate
+        return priceUsd / 1000000
       }
       return null
       
     case 'image':
       if (deal.modality === 'Image') {
-        // Estimate based on deal size
         if (deal.dataType?.includes('200M')) {
-          return deal.priceUsd / 200000000 // Freepik example
+          return priceUsd / 200000000
         }
-        return deal.priceUsd / 1000000 // rough estimate
+        return priceUsd / 1000000
       }
       return null
       
     case 'minute':
       if (deal.modality === 'Video' || deal.modality === 'Audio') {
-        // Estimate: 1 hour of content
-        return deal.priceUsd / 60 // per minute
+        return priceUsd / 60
       }
       return null
       
@@ -77,6 +121,22 @@ export default async function NormalizationPage() {
   const deals = await getDealsForNormalization()
 
   const unitTypes = ['token', 'record', 'image', 'minute']
+
+  // Convert all prices to USD for normalization
+  const dealsWithUSD = await Promise.all(
+    deals.map(async (deal) => {
+      const priceUsd = await convertToUSD(
+        deal.priceUsd || deal.priceRangeMinUsd,
+        deal.priceCurrency || 'USD',
+        deal.date
+      )
+      return {
+        ...deal,
+        priceUsdConverted: priceUsd,
+        originalCurrency: deal.priceCurrency || 'USD',
+      }
+    })
+  )
 
   return (
     <main className="min-h-screen bg-background">
@@ -115,40 +175,51 @@ export default async function NormalizationPage() {
                 </tr>
               </thead>
               <tbody>
-                {deals.map((deal) => {
-                  const rawPrice = deal.priceUsd
-                    ? deal.priceUsd >= 1000000000
-                      ? `$${(deal.priceUsd / 1000000000).toFixed(1)}B`
-                      : deal.priceUsd >= 1000000
-                      ? `$${(deal.priceUsd / 1000000).toFixed(0)}M`
-                      : `$${deal.priceUsd.toFixed(0)}`
-                    : deal.reportedTerms || 'Undisclosed'
+                {await Promise.all(
+                  dealsWithUSD.map(async (deal) => {
+                    const rawPrice = deal.priceUsdConverted
+                      ? deal.priceUsdConverted >= 1000000000
+                        ? `$${(deal.priceUsdConverted / 1000000000).toFixed(1)}B`
+                        : deal.priceUsdConverted >= 1000000
+                        ? `$${(deal.priceUsdConverted / 1000000).toFixed(0)}M`
+                        : `$${deal.priceUsdConverted.toFixed(0)}`
+                      : deal.reportedTerms || 'Undisclosed'
 
-                  return (
-                    <tr key={deal.id}>
-                      <td>
-                        <div>
-                          <div className="font-medium">{deal.provider}</div>
-                          <div className="text-sm text-text-muted">→ {deal.buyer}</div>
-                          <div className="text-xs text-text-muted mt-1">{deal.modality}</div>
-                        </div>
-                      </td>
-                      <td>{rawPrice}</td>
-                      <td className="text-sm">
-                        {formatNormalizedPrice(normalizePrice(deal, 'token'), 'token')}
-                      </td>
-                      <td className="text-sm">
-                        {formatNormalizedPrice(normalizePrice(deal, 'record'), 'record')}
-                      </td>
-                      <td className="text-sm">
-                        {formatNormalizedPrice(normalizePrice(deal, 'image'), 'image')}
-                      </td>
-                      <td className="text-sm">
-                        {formatNormalizedPrice(normalizePrice(deal, 'minute'), 'minute')}
-                      </td>
-                    </tr>
-                  )
-                })}
+                    const currencyNote = deal.originalCurrency !== 'USD' 
+                      ? ` (converted from ${deal.originalCurrency})`
+                      : ''
+
+                    return (
+                      <tr key={deal.id}>
+                        <td>
+                          <div>
+                            <div className="font-medium">{deal.provider}</div>
+                            <div className="text-sm text-text-muted">→ {deal.buyer}</div>
+                            <div className="text-xs text-text-muted mt-1">{deal.modality}</div>
+                          </div>
+                        </td>
+                        <td>
+                          <div>{rawPrice}</div>
+                          {currencyNote && (
+                            <div className="text-xs text-text-muted/70 italic">{currencyNote}</div>
+                          )}
+                        </td>
+                        <td className="text-sm">
+                          {formatNormalizedPrice(await getNormalizedPrice(deal, 'token'), 'token')}
+                        </td>
+                        <td className="text-sm">
+                          {formatNormalizedPrice(await getNormalizedPrice(deal, 'record'), 'record')}
+                        </td>
+                        <td className="text-sm">
+                          {formatNormalizedPrice(await getNormalizedPrice(deal, 'image'), 'image')}
+                        </td>
+                        <td className="text-sm">
+                          {formatNormalizedPrice(await getNormalizedPrice(deal, 'minute'), 'minute')}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
               </tbody>
             </table>
           </div>

@@ -3,14 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
+    "dev": "npm run setup && next dev",
+    "build": "npm run setup && next build",
     "start": "next start",
     "lint": "next lint",
+    "setup": "prisma generate && npm run setup:python",
+    "setup:python": "cd registry && python3 -m prisma generate 2>/dev/null || echo 'Python Prisma client generation skipped (optional)' && cd ..",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "pipeline:monitor": "cd ingestion && python monitor.py",
+    "registry:ingest": "cd registry && python ingest_priority_models.py",
+    "registry:ingest:test": "cd registry && python ingest_priority_models.py --limit 5",
+    "registry:linkages": "cd registry && python create_linkages.py"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",
@@ -30,4 +36,3 @@
     "typescript": "^5.5.4"
   }
 }
-

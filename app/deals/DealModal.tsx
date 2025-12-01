@@ -1,38 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-
-interface Deal {
-  id: string
-  provider: string
-  buyer: string
-  modality: string
-  dataType: string | null
-  priceUsd: number | null
-  priceRangeMinUsd: number | null
-  priceRangeMaxUsd: number | null
-  reportedTerms: string | null
-  exclusive: boolean | null
-  creatorsCompensated: boolean | null
-  creatorSplitPercentage: number | null
-  revenueShare: boolean | null
-  date: string | null
-  dealType: string | null
-  pricingMechanism: string | null
-  sourcePrimary: string | null
-  trainingAllowed: boolean | null
-  finetuningAllowed: boolean | null
-  inferenceAllowed: boolean | null
-  redistributionAllowed: boolean | null
-  deletionRequired: boolean | null
-  notes: string | null
-  sources: string | null
-  pricingNormalizations?: Array<{
-    unitType: string
-    normalizedCostPerUnit: number
-    normalizationMethod: string
-  }>
-}
+import DealFeed from '../components/deals/DealFeed'
+import { getSourceUrl } from '@/lib/utils'
+import type { Deal } from '@/app/types/deal'
+import Tooltip from '@/app/components/Tooltip'
 
 interface DealModalProps {
   deal: Deal | null
@@ -62,12 +34,12 @@ function formatPrice(deal: Deal) {
 export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden'
+      document.body.classList.add('overflow-hidden')
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.classList.remove('overflow-hidden')
     }
     return () => {
-      document.body.style.overflow = 'unset'
+      document.body.classList.remove('overflow-hidden')
     }
   }, [isOpen])
 
@@ -79,7 +51,7 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-surface rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-surface rounded-sm shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -117,7 +89,23 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
             </div>
             <div>
               <div className="text-sm text-text-muted mb-1">Source</div>
-              <div className="font-medium">{deal.sourcePrimary || '—'}</div>
+              {(() => {
+                const sourceUrl = getSourceUrl(deal.sourcePrimary)
+                if (sourceUrl) {
+                  return (
+                    <a
+                      href={sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-accent hover:text-accent-hover underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {deal.sourcePrimary}
+                    </a>
+                  )
+                }
+                return <div className="font-medium">{deal.sourcePrimary || '—'}</div>
+              })()}
             </div>
           </div>
 
@@ -129,31 +117,87 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
             </div>
           )}
 
-          {/* Rights & Compensation */}
+          {/* Deal Details & Compensation */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-lg font-semibold mb-4">Rights Granted</h3>
+              <h3 className="text-lg font-semibold mb-4">Deal Details</h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Training</span>
-                  <span>{deal.trainingAllowed !== null ? (deal.trainingAllowed ? 'Yes' : 'No') : '—'}</span>
+                  <Tooltip content="The structure of the deal: 'aggregate' (bulk licensing), 'per-unit' (pay per item), 'commissioning' (custom data creation), or 'acquisition' (company purchase).">
+                    <span className="text-text-muted underline decoration-dotted cursor-help">Deal Type</span>
+                  </Tooltip>
+                  <span className="font-medium">{deal.dealType || deal.pricingMechanism || '—'}</span>
                 </div>
+                {deal.durationYears && (
+                  <div className="flex justify-between">
+                    <Tooltip content="The length of the licensing agreement in years. Some deals are one-time purchases, others are multi-year subscriptions.">
+                      <span className="text-text-muted underline decoration-dotted cursor-help">Duration</span>
+                    </Tooltip>
+                    <span>{deal.durationYears === 1 ? '1 year' : `${deal.durationYears} years`}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Fine-tuning</span>
-                  <span>{deal.finetuningAllowed !== null ? (deal.finetuningAllowed ? 'Yes' : 'No') : '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Inference</span>
-                  <span>{deal.inferenceAllowed !== null ? (deal.inferenceAllowed ? 'Yes' : 'No') : '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-muted">Redistribution</span>
-                  <span>{deal.redistributionAllowed !== null ? (deal.redistributionAllowed ? 'Yes' : 'No') : '—'}</span>
+                  <Tooltip content="Whether the deal grants exclusive rights to the buyer. Exclusive deals mean the data provider cannot license the same data to other AI companies.">
+                    <span className="text-text-muted underline decoration-dotted cursor-help">Exclusive</span>
+                  </Tooltip>
+                  <span>
+                    {deal.exclusive === true ? (
+                      <span className="badge badge-primary">Yes</span>
+                    ) : deal.exclusive === false ? (
+                      'No'
+                    ) : (
+                      '—'
+                    )}
+                  </span>
                 </div>
                 {deal.deletionRequired && (
                   <div className="flex justify-between">
-                    <span className="text-text-muted">Deletion Required</span>
-                    <span>Yes</span>
+                    <Tooltip content="Whether the deal requires deletion of training data upon request. Some news/publisher deals include 'right to be forgotten' provisions.">
+                      <span className="text-text-muted underline decoration-dotted cursor-help">Deletion Required</span>
+                    </Tooltip>
+                    <span className="badge badge-secondary">Yes</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <Tooltip content="Whether the data can be used for training new AI models. Most deals allow this, as it's the primary purpose.">
+                    <span className="text-text-muted underline decoration-dotted cursor-help">Training Allowed</span>
+                  </Tooltip>
+                  <span>
+                    {deal.trainingAllowed === true ? (
+                      <span className="badge badge-primary">Yes</span>
+                    ) : deal.trainingAllowed === false ? (
+                      <span className="text-text-muted/60">No</span>
+                    ) : (
+                      <span className="text-text-muted/40">—</span>
+                    )}
+                  </span>
+                </div>
+                {deal.finetuningAllowed !== null && (
+                  <div className="flex justify-between">
+                    <Tooltip content="Whether the data can be used for fine-tuning existing models. Some deals restrict this to prevent model copying.">
+                      <span className="text-text-muted underline decoration-dotted cursor-help">Finetuning Allowed</span>
+                    </Tooltip>
+                    <span>
+                      {deal.finetuningAllowed ? (
+                        <span className="badge badge-primary">Yes</span>
+                      ) : (
+                        <span className="text-text-muted/60">No</span>
+                      )}
+                    </span>
+                  </div>
+                )}
+                {deal.redistributionAllowed !== null && (
+                  <div className="flex justify-between">
+                    <Tooltip content="Whether the trained model can redistribute or share the training data. Most deals prohibit this to protect data rights.">
+                      <span className="text-text-muted underline decoration-dotted cursor-help">Redistribution Allowed</span>
+                    </Tooltip>
+                    <span>
+                      {deal.redistributionAllowed ? (
+                        <span className="badge badge-primary">Yes</span>
+                      ) : (
+                        <span className="text-text-muted/60">No</span>
+                      )}
+                    </span>
                   </div>
                 )}
               </div>
@@ -163,7 +207,9 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
               <h3 className="text-lg font-semibold mb-4">Creator Compensation</h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Compensated</span>
+                  <Tooltip content="Whether the original creators (authors, artists, musicians, etc.) are compensated for their work being used in AI training. This can include direct payments, revenue sharing, or royalties.">
+                    <span className="text-text-muted underline decoration-dotted cursor-help">Compensated</span>
+                  </Tooltip>
                   <span>
                     {deal.creatorsCompensated === true ? (
                       <span className="badge badge-primary">Yes</span>
@@ -176,14 +222,18 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
                 </div>
                 {deal.creatorSplitPercentage && (
                   <div className="flex justify-between">
-                    <span className="text-text-muted">Split</span>
-                    <span>{deal.creatorSplitPercentage}%</span>
+                    <Tooltip content="The percentage of revenue or payment that goes to the original creators (e.g., authors, artists) versus the publisher or platform.">
+                      <span className="text-text-muted underline decoration-dotted cursor-help">Split</span>
+                    </Tooltip>
+                    <span className="font-medium">{deal.creatorSplitPercentage}%</span>
                   </div>
                 )}
                 {deal.revenueShare && (
                   <div className="flex justify-between">
-                    <span className="text-text-muted">Revenue Share</span>
-                    <span>Yes</span>
+                    <Tooltip content="Whether creators receive a share of revenue from the AI model's usage, rather than a one-time payment. This is common in news/publisher deals.">
+                      <span className="text-text-muted underline decoration-dotted cursor-help">Revenue Share</span>
+                    </Tooltip>
+                    <span className="badge badge-primary">Yes</span>
                   </div>
                 )}
               </div>
@@ -199,7 +249,7 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
                   <h3 className="text-lg font-semibold mb-4">Pricing Normalizations</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {normalizations.map((norm, idx) => (
-                      <div key={idx} className="border border-border-subtle rounded p-3">
+                      <div key={idx} className="border border-border-subtle rounded-sm p-3">
                         <div className="text-xs text-text-muted mb-1">Per {norm.unitType}</div>
                         <div className="font-medium">
                           {norm.normalizedCostPerUnit < 0.001
@@ -228,13 +278,25 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
             </div>
           )}
 
-          {/* Sources */}
+          {/* Sources - Hyperlinked */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Sources</h3>
             <div className="space-y-2">
               {deal.sourcePrimary && (
                 <div className="text-text-muted">
-                  Primary: <span className="text-text font-medium">{deal.sourcePrimary}</span>
+                  Primary:{' '}
+                  {deal.sourcePrimary.startsWith('http') ? (
+                    <a
+                      href={deal.sourcePrimary}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent hover:text-accent-hover font-medium underline"
+                    >
+                      {deal.sourcePrimary}
+                    </a>
+                  ) : (
+                    <span className="text-text font-medium">{deal.sourcePrimary}</span>
+                  )}
                 </div>
               )}
               {deal.sources && (() => {
@@ -251,7 +313,7 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
                                 href={source}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-accent hover:text-accent-hover break-all"
+                                className="text-accent hover:text-accent-hover break-all underline"
                               >
                                 {source}
                               </a>
@@ -270,7 +332,7 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
                           href={deal.sources}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-accent hover:text-accent-hover break-all"
+                          className="text-accent hover:text-accent-hover break-all underline"
                         >
                           {deal.sources}
                         </a>
@@ -284,6 +346,11 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
                 <div className="text-text-muted">No sources available</div>
               )}
             </div>
+          </div>
+
+          {/* Related Content Feed */}
+          <div className="pt-6 border-t border-border">
+            <DealFeed dealId={deal.id} provider={deal.provider} buyer={deal.buyer} />
           </div>
 
           {/* Modality Badge */}

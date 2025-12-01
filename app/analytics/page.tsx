@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import ProgressBar from '../components/ProgressBar'
 
 async function getAnalytics() {
   const deals = await prisma.deal.findMany({
@@ -27,11 +28,26 @@ async function getAnalytics() {
   })
 
   // Buyer breakdown
+  // Exclude aggregate/placeholder buyer names
+  const excludedBuyers = new Set([
+    'Multiple AI labs',
+    'Multiple AI Labs',
+    'Multiple labs',
+    'Various',
+    'Various AI labs',
+    'Unnamed AI firms',
+    'Unnamed AI Firms',
+  ])
+  
   const buyerCounts: Record<string, number> = {}
   const buyerSpend: Record<string, number> = {}
   deals.forEach(deal => {
     const buyers = deal.buyer.split(',').map(b => b.trim())
     buyers.forEach(buyer => {
+      // Skip excluded aggregate buyer names
+      if (excludedBuyers.has(buyer)) {
+        return
+      }
       buyerCounts[buyer] = (buyerCounts[buyer] || 0) + 1
       buyerSpend[buyer] = (buyerSpend[buyer] || 0) + (deal.priceUsd || 0)
     })
@@ -86,7 +102,7 @@ export default async function AnalyticsPage() {
   const analytics = await getAnalytics()
 
   return (
-    <main className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <div className="container-content section-padding">
         <div className="mb-8">
           <h1 className="text-4xl font-semibold mb-4">Market Analytics</h1>
@@ -125,11 +141,8 @@ export default async function AnalyticsPage() {
                 <div key={modality} className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0">
                   <span className="font-medium">{modality}</span>
                   <div className="flex items-center gap-4">
-                    <div className="w-32 bg-border-subtle rounded-full h-2">
-                      <div
-                        className="bg-accent h-2 rounded-full"
-                        style={{ width: `${(count / analytics.totalDeals) * 100}%` }}
-                      />
+                    <div className="w-32">
+                      <ProgressBar percentage={(count / analytics.totalDeals) * 100} className="h-2" />
                     </div>
                     <span className="text-text-muted w-12 text-right">{count}</span>
                   </div>
@@ -178,13 +191,8 @@ export default async function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="mt-8">
-          <Link href="/" className="text-accent hover:text-accent-hover">
-            ← Back to Deals
-          </Link>
-        </div>
       </div>
-    </main>
+    </div>
   )
 }
 

@@ -9,7 +9,8 @@ python-dotenv>=1.0.0
 # Database
 psycopg2-binary>=2.9.9
 sqlalchemy>=2.0.23
-prisma>=0.11.0
+# Note: Prisma Python client is generated via: npx prisma generate
+# The prisma package is installed via npm, not pip
 
 # LLM APIs
 openai>=1.12.0
@@ -21,10 +22,11 @@ pydantic>=2.6.0
 # Utilities
 python-dateutil>=2.8.2
 tqdm>=4.66.0
+feedparser>=6.0.10
 
-# Exa API (when available)
-# exa-py>=1.0.0
+# MCP (Model Context Protocol)
+mcp>=0.1.0
 
-# Perplexity API (when available)
-# perplexity>=1.0.0
+# Exa API (install separately if needed)
+# pip install exa-py
 

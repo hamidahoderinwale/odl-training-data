@@ -1,0 +1,43 @@
+# Python services container (ingestion pipeline, registry)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python requirements
+COPY ingestion/requirements.txt ./ingestion/
+COPY registry/requirements.txt ./registry/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r ingestion/requirements.txt && \
+    pip install --no-cache-dir -r registry/requirements.txt
+
+# Copy Prisma schema and generate clients
+COPY prisma ./prisma/
+COPY package.json ./
+
+# Install Node.js dependencies for Prisma
+RUN npm install
+
+# Generate Prisma clients (both Node.js and Python)
+RUN npx prisma generate && \
+    python3 -m prisma generate
+
+# Copy application code
+COPY ingestion ./ingestion
+COPY registry ./registry
+
+# Set Python path
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Default command (can be overridden in docker-compose)
+CMD ["python3", "-m", "registry.ingest_priority_models"]
+

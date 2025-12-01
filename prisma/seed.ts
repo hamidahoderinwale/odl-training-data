@@ -224,7 +224,7 @@ const dealsData = [
   },
   {
     id: '15',
-    date: '2023-2024',
+    date: '2023-24', // Abbreviated range as per PDF Table 4
     modality: 'Video',
     provider: 'Independent creators',
     buyer: 'Runway, Pika Labs',
@@ -240,7 +240,7 @@ const dealsData = [
   },
   {
     id: '16',
-    date: '2020-2024',
+    date: '2020-24', // Abbreviated range as per PDF Table 4
     modality: 'Satellite',
     provider: 'Planet Labs',
     buyer: 'Agriculture / gov / AI firms',

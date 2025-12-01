@@ -3,7 +3,7 @@ Deal Validator - Pydantic models for validation
 """
 
 from pydantic import BaseModel, Field, validator
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
 
@@ -79,9 +79,25 @@ class DealData(BaseModel):
     # Provenance
     sources: List[str] = Field(default_factory=list)
     source_primary: Optional[str] = None
+    discovered_via: Optional[str] = None
+    exa_query: Optional[str] = None
+    exa_score: Optional[float] = None
+    exa_retrieved_at: Optional[str] = None
+    
+    # Extraction metadata
+    extraction_metadata: Optional[Dict[str, Any]] = None
+    raw_text_snippets: List[str] = Field(default_factory=list)
+    regex_confidence: Optional[str] = None
+    llm_confidence: Optional[str] = None
+    last_extracted: Optional[str] = None
+    
+    # Linkages
+    linkages_metadata: Optional[Dict[str, Any]] = None
+    
     notes: Optional[str] = None
     deal_stage: str = Field(default="announced")
     confidence_score: float = Field(default=0.5, ge=0, le=1)
+    version: Optional[str] = None
     
     @validator("modality")
     def validate_modality(cls, v):
