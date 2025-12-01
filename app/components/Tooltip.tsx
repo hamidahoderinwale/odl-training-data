@@ -33,7 +33,7 @@ export default function Tooltip({
       {children}
       {isVisible && (
         <div
-          className={`absolute z-50 ${positionClasses[position]} w-64 p-3 bg-surface border border-border rounded-sm shadow-lg text-xs text-text leading-relaxed pointer-events-none`}
+          className={`absolute z-50 ${positionClasses[position]} w-64 p-3 bg-surface border border-border rounded-none shadow-lg text-xs text-text leading-relaxed pointer-events-none`}
         >
           {content}
           {/* Arrow */}

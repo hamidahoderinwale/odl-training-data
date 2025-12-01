@@ -52,7 +52,7 @@ export default function TokenCalculationCard({
         
         <div className="pt-3 border-t border-border-subtle">
           <strong className="text-text">Step-by-Step Calculation:</strong>
-          <div className="mt-2 space-y-2 font-mono text-xs bg-[rgba(139,111,71,0.05)] p-3 rounded-sm">
+          <div className="mt-2 space-y-2 font-mono text-xs bg-[rgba(139,111,71,0.05)] p-3 rounded-none">
             <div>
               <span className="text-text-muted">Min estimate:</span> {paramsAbs.toLocaleString()} params × {ratioMin} = {tokensEstMin ? (tokensEstMin / 1e9).toFixed(1) : '—'}B tokens
             </div>

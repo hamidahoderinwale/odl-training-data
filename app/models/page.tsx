@@ -59,14 +59,12 @@ export default async function ModelsPage() {
         />
         
         {/* Header */}
-        <div className="mb-6">
-                  <div className="mb-4">
-                    <h1 className="text-4xl font-semibold mb-2">Model Registry</h1>
-                    <p className="text-text-muted text-lg">
-                      Training data scale estimates for major AI models
-                    </p>
-                  </div>
-                </div>
+        <div className="mb-4">
+          <h1 className="text-3xl font-semibold mb-1">Model Registry</h1>
+          <p className="text-text-muted text-sm">
+            Training data scale estimates for major AI models
+          </p>
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
@@ -94,9 +92,9 @@ export default async function ModelsPage() {
             <table className="table text-sm">
               <thead>
                 <tr className="border-b border-border-subtle">
-                  <th className="px-4 py-3 text-left font-semibold">Model</th>
-                  <th className="px-4 py-3 text-left font-semibold">Provider</th>
-                  <th className="px-4 py-3 text-left font-semibold">
+                  <th className="text-left font-semibold">Model</th>
+                  <th className="text-left font-semibold">Provider</th>
+                  <th className="text-left font-semibold">
                     <Tooltip content="The number of trainable parameters in the model, typically measured in billions (B) or trillions (T). More parameters generally mean more capacity to learn complex patterns.">
                       <span className="underline decoration-dotted cursor-help">Params</span>
                     </Tooltip>
@@ -132,7 +130,7 @@ export default async function ModelsPage() {
                       key={model.id}
                       className="cursor-pointer transition-colors border-b border-border-subtle last:border-0 hover:bg-[rgba(232,225,217,0.3)]"
                     >
-                      <td className="px-4 py-3">
+                      <td>
                         <Link
                           href={`/models/${model.id}`}
                           className="font-medium text-accent hover:text-accent-hover"
@@ -143,10 +141,10 @@ export default async function ModelsPage() {
                           <div className="text-xs text-text-muted mt-0.5">{model.family}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td>
                         <div className="text-sm">{model.provider}</div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td>
                         <div className="text-sm">{formatParams(model.params)}</div>
                         {model.isMoe && (
                           <Tooltip content="Mixture of Experts (MoE): A model architecture that uses multiple specialized sub-networks (experts) but only activates a subset for each input. This allows for larger models with lower computational costs.">
@@ -174,7 +172,7 @@ export default async function ModelsPage() {
                           <span className="text-text-muted/60">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td>
                         <div className="flex items-center gap-2">
                           {model.architectureType && (
                             <span className="badge badge-secondary text-xs">
@@ -188,14 +186,14 @@ export default async function ModelsPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td>
                         {model.evidenceStrength && (
                           <span className="badge badge-secondary text-xs">
                             {model.evidenceStrength.replace('S-', '')}
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td>
                         <div className="text-sm text-text-muted/80">
                           {model.releaseDate ? formatDate(model.releaseDate instanceof Date ? model.releaseDate.toISOString() : String(model.releaseDate)) : '—'}
                         </div>

@@ -143,4 +143,68 @@ class EvidenceProfileManager:
             explanation += f". Uncertainties: {unc_desc}"
         
         return explanation
+    
+    @staticmethod
+    def generate_from_web_data(
+        web_data: Dict[str, Any],
+        existing_evidence: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Generate evidence profile from web-extracted data
+        
+        Args:
+            web_data: Extracted data from web search/LLM
+            existing_evidence: Existing evidence profile to merge with
+        
+        Returns:
+            Evidence profile dict
+        """
+        evidence_types = set(web_data.get("evidence_types", []))
+        confidence = web_data.get("confidence", "medium")
+        sources_count = len(web_data.get("sources", []))
+        raw_snippets = web_data.get("raw_evidence_snippets", [])
+        
+        # Determine evidence strength based on sources and confidence
+        if sources_count >= 3 and confidence == "high":
+            strength = "S-High"
+        elif sources_count >= 2 or confidence == "high":
+            strength = "S-Medium"
+        else:
+            strength = "S-Low"
+        
+        # Identify uncertainty sources for missing information
+        uncertainty_sources = []
+        if not web_data.get("release_date"):
+            uncertainty_sources.append("U5")  # Intentional opacity or missing
+        if not web_data.get("architecture_type"):
+            uncertainty_sources.append("U3")  # Architecture unclear
+        if not web_data.get("training_data_sources"):
+            uncertainty_sources.append("U2")  # Data composition unknown
+        
+        # If we have existing evidence, merge it
+        if existing_evidence:
+            existing_types = set(existing_evidence.get("evidence_types", []))
+            evidence_types.update(existing_types)
+            
+            # Use higher strength if available
+            existing_strength = existing_evidence.get("strength")
+            if existing_strength:
+                strength_order = {"S-High": 3, "S-Medium": 2, "S-Low": 1}
+                if strength_order.get(existing_strength, 0) > strength_order.get(strength, 0):
+                    strength = existing_strength
+            
+            # Merge uncertainties
+            existing_unc = set(existing_evidence.get("uncertainty", []))
+            uncertainty_sources = list(set(uncertainty_sources) | existing_unc)
+        
+        # Create evidence profile
+        profile = {
+            "evidence_types": list(evidence_types),
+            "strength": strength,
+            "uncertainty": uncertainty_sources,
+            "generated_at": datetime.now().isoformat(),
+            "evidence_version": "1.0",
+        }
+        
+        return profile
 

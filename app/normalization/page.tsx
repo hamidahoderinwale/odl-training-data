@@ -141,16 +141,16 @@ export default async function NormalizationPage() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container-content section-padding">
-        <div className="mb-8">
-          <h1 className="text-4xl font-semibold mb-4">Pricing Normalization Tool</h1>
-          <p className="text-text-muted text-lg">
+        <div className="mb-4">
+          <h1 className="text-3xl font-semibold mb-1">Pricing Normalization Tool</h1>
+          <p className="text-text-muted text-sm">
             Compare deals on an apples-to-apples basis by normalizing to per-unit pricing
           </p>
         </div>
 
-        <div className="card mb-8">
-          <h2 className="text-2xl font-semibold mb-4">How It Works</h2>
-          <p className="text-text-muted leading-relaxed mb-4">
+        <div className="card mb-6">
+          <h2 className="text-xl font-semibold mb-3">How It Works</h2>
+          <p className="text-text-muted text-sm leading-relaxed mb-3">
             Different deals use different pricing models (per-book, per-track, aggregate licensing, etc.).
             This tool normalizes prices to common units (tokens, records, images, minutes) to enable
             direct comparison.

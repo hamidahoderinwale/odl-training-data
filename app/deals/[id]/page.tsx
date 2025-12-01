@@ -62,13 +62,13 @@ export default async function DealDetailPage({
 
         <div className="max-w-4xl">
           {/* Header Card */}
-          <div className="card mb-8">
-            <div className="flex items-start justify-between mb-6">
+          <div className="card mb-6">
+            <div className="flex items-start justify-between mb-4">
               <div>
-                <h1 className="text-3xl font-semibold mb-2">
+                <h1 className="text-2xl font-semibold mb-1">
                   {deal.provider} → {deal.buyer}
                 </h1>
-                <p className="text-text-muted">{deal.dataType}</p>
+                <p className="text-text-muted text-sm">{deal.dataType}</p>
               </div>
               <div className="flex gap-2">
                 <span className="badge badge-secondary">{deal.modality}</span>
@@ -78,7 +78,7 @@ export default async function DealDetailPage({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-border">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border">
               <div>
                 <div className="text-sm text-text-muted mb-1">Price</div>
                 <div className="text-xl font-semibold">{formatPrice(deal)}</div>
@@ -115,16 +115,16 @@ export default async function DealDetailPage({
 
           {/* Reported Terms */}
           {deal.reportedTerms && (
-            <div className="card mb-8">
-              <h2 className="text-xl font-semibold mb-4">Reported Terms</h2>
-              <p className="text-lg leading-relaxed">{deal.reportedTerms}</p>
+            <div className="card mb-6">
+              <h2 className="text-lg font-semibold mb-3">Reported Terms</h2>
+              <p className="text-sm leading-relaxed">{deal.reportedTerms}</p>
             </div>
           )}
 
           {/* Deal Details & Compensation */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
             <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Deal Details</h3>
+              <h3 className="text-base font-semibold mb-3">Deal Details</h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-text-muted">Deal Type</span>
@@ -158,7 +158,7 @@ export default async function DealDetailPage({
             </div>
 
             <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Creator Compensation</h3>
+              <h3 className="text-base font-semibold mb-3">Creator Compensation</h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-text-muted">Compensated</span>
@@ -190,15 +190,15 @@ export default async function DealDetailPage({
 
           {/* Notes */}
           {deal.notes && (
-            <div className="card mb-8">
-              <h3 className="text-lg font-semibold mb-4">Notes</h3>
-              <p className="leading-relaxed">{deal.notes}</p>
+            <div className="card mb-6">
+              <h3 className="text-base font-semibold mb-3">Notes</h3>
+              <p className="text-sm leading-relaxed">{deal.notes}</p>
             </div>
           )}
 
           {/* Sources - Hyperlinked */}
-          <div className="card mb-8">
-            <h3 className="text-lg font-semibold mb-4">Sources</h3>
+          <div className="card mb-6">
+            <h3 className="text-base font-semibold mb-3">Sources</h3>
             <div className="space-y-2">
               {deal.sourcePrimary && (
                 <div className="text-text-muted">

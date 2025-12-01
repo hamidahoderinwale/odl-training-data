@@ -91,15 +91,15 @@ export default async function ModelDetailPage({
 
         <div className="max-w-4xl">
           {/* Header Card */}
-          <div className="card mb-8">
-            <div className="mb-4">
-              <h1 className="text-3xl font-semibold mb-2">{model.modelId}</h1>
+          <div className="card mb-6">
+            <div className="mb-3">
+              <h1 className="text-2xl font-semibold mb-1">{model.modelId}</h1>
               {model.family && (
-                <p className="text-text-muted text-lg">{model.family}</p>
+                <p className="text-text-muted text-sm">{model.family}</p>
               )}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-border">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border">
               <div>
                 <div className="text-sm text-text-muted mb-1">Provider</div>
                 <div className="font-medium">{model.provider}</div>
@@ -137,9 +137,9 @@ export default async function ModelDetailPage({
 
           {/* Token Estimates */}
           {(model.tokensEstMin || model.tokensEstMax || model.tokensEstMid) && (
-            <div className="mb-8">
-              <div className="card mb-6">
-                <h2 className="text-xl font-semibold mb-4">Training Token Estimates</h2>
+            <div className="mb-6">
+              <div className="card mb-4">
+                <h2 className="text-lg font-semibold mb-3">Training Token Estimates</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <div className="text-sm text-text-muted mb-1">Minimum</div>
@@ -180,8 +180,8 @@ export default async function ModelDetailPage({
 
           {/* Evidence Profile */}
           {(evidenceTypes.length > 0 || model.evidenceStrength || uncertaintySources.length > 0) && (
-            <div className="card mb-8">
-              <h2 className="text-xl font-semibold mb-4">Evidence Profile</h2>
+            <div className="card mb-6">
+              <h2 className="text-lg font-semibold mb-3">Evidence Profile</h2>
               <div className="space-y-4">
                 {model.evidenceStrength && (
                   <div>
@@ -221,8 +221,8 @@ export default async function ModelDetailPage({
 
           {/* Training Compute */}
           {(model.flopsReported || model.flopsEstimated) && (
-            <div className="card mb-8">
-              <h2 className="text-xl font-semibold mb-4">Training Compute</h2>
+            <div className="card mb-6">
+              <h2 className="text-lg font-semibold mb-3">Training Compute</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {model.flopsReported && (
                   <div>
@@ -242,13 +242,13 @@ export default async function ModelDetailPage({
 
           {/* Linked Deals */}
           {model.modelLinkages && model.modelLinkages.length > 0 && (
-            <div className="card mb-8">
-              <h2 className="text-xl font-semibold mb-4">Linked Training Data Deals</h2>
+            <div className="card mb-6">
+              <h2 className="text-lg font-semibold mb-3">Linked Training Data Deals</h2>
               <div className="space-y-3">
                 {model.modelLinkages.map((linkage) => (
                   <div
                     key={linkage.id}
-                    className="p-4 border border-border-subtle rounded-sm hover:bg-border-subtle/30 transition-colors"
+                    className="p-4 border border-border-subtle rounded-none hover:bg-border-subtle/30 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
@@ -285,7 +285,7 @@ export default async function ModelDetailPage({
           {/* Sources */}
           {sources.length > 0 && (
             <div className="card">
-              <h2 className="text-xl font-semibold mb-4">Sources</h2>
+              <h2 className="text-lg font-semibold mb-3">Sources</h2>
               <div className="space-y-2">
                 {sources.map((source, idx) => (
                   <div key={idx}>

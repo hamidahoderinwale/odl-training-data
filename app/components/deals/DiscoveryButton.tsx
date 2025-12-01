@@ -69,7 +69,7 @@ export default function DiscoveryButton() {
       </button>
       
       {status && (
-        <div className="absolute top-full right-0 mt-2 z-50 bg-surface border border-border rounded-sm shadow-lg p-3 min-w-[300px]">
+        <div className="absolute top-full right-0 mt-2 z-50 bg-surface border border-border rounded-none shadow-lg p-3 min-w-[300px]">
           <div className="text-xs font-semibold mb-2 text-text">{status}</div>
           {results && (
             <div className="text-xs text-text-muted space-y-1">

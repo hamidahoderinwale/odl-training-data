@@ -45,7 +45,7 @@ export default function TokenEstimateTooltip({
       
       {isOpen && (
         <div 
-          className="absolute z-50 left-0 top-full mt-2 w-80 bg-surface border border-border rounded-sm shadow-lg p-4 text-xs"
+          className="absolute z-50 left-0 top-full mt-2 w-80 bg-surface border border-border rounded-none shadow-lg p-4 text-xs"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="font-semibold text-text mb-2">Token Estimate Calculation</div>

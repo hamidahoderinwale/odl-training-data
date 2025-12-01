@@ -51,11 +51,11 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-surface rounded-sm shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-surface rounded-none shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-surface border-b border-border px-6 py-4 flex items-start justify-between">
+        <div className="sticky top-0 bg-surface border-b border-border px-4 py-3 flex items-start justify-between">
           <div className="flex-1">
             <h2 className="text-2xl font-semibold mb-1">
               {deal.provider} → {deal.buyer}
@@ -249,7 +249,7 @@ export default function DealModal({ deal, isOpen, onClose }: DealModalProps) {
                   <h3 className="text-lg font-semibold mb-4">Pricing Normalizations</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {normalizations.map((norm, idx) => (
-                      <div key={idx} className="border border-border-subtle rounded-sm p-3">
+                      <div key={idx} className="border border-border-subtle rounded-none p-3">
                         <div className="text-xs text-text-muted mb-1">Per {norm.unitType}</div>
                         <div className="font-medium">
                           {norm.normalizedCostPerUnit < 0.001

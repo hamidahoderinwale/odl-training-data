@@ -391,7 +391,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
             <thead>
               <tr className="bg-border-subtle">
                 <th 
-                  className="cursor-pointer hover:bg-border select-none px-4 py-3"
+                  className="cursor-pointer hover:bg-border select-none"
                   onClick={() => handleSort('provider')}
                   title="Click to sort by provider"
                 >
@@ -508,7 +508,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                         onClick={() => toggleGroup(groupKey)}
                         className="cursor-pointer bg-border-subtle hover:bg-border transition-colors"
                       >
-                        <td colSpan={7} className="px-4 py-3">
+                        <td colSpan={7}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="text-xs text-text-muted">{isExpanded ? '▼' : '▶'}</span>
@@ -539,14 +539,14 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                           onClick={() => handleDealClick(deal)}
                           className="cursor-pointer transition-colors border-b border-border-subtle last:border-0 hover:bg-[rgba(232,225,217,0.3)]"
                         >
-                          <td className="px-4 py-3 pl-8">
+                          <td className="pl-6">
                             <div className="flex items-center gap-2">
                               <div className="font-medium text-accent hover:text-accent-hover">
                                 {deal.provider}
                               </div>
                               {deal.discoveredVia === 'exa' && (
                                 <span 
-                                  className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-sm font-mono"
+                                  className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-none font-mono"
                                   title={`Source: Exa${deal.exaQuery ? ` (${deal.exaQuery})` : ''}${deal.exaScore ? ` - Score: ${deal.exaScore.toFixed(2)}` : ''}`}
                                 >
                                   ARTICLE
@@ -554,7 +554,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                               )}
                               {deal.discoveredVia && deal.discoveredVia !== 'exa' && (
                                 <span 
-                                  className="text-[10px] px-1.5 py-0.5 bg-border-subtle text-text-muted rounded-sm"
+                                  className="text-[10px] px-1.5 py-0.5 bg-border-subtle text-text-muted rounded-none"
                                   title={`Discovered via ${deal.discoveredVia}`}
                                 >
                                   {deal.discoveredVia.toUpperCase()}
@@ -562,10 +562,10 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td>
                             <div className="text-sm">{deal.buyer}</div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td>
                             <span className="badge badge-secondary text-xs">{deal.modality}</span>
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -589,7 +589,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                               <span className="text-text-muted/40 text-xs">—</span>
                             )}
                           </td>
-                          <td className="px-4 py-3">
+                          <td>
                             <div className="text-sm text-text-muted/80">{formatDate(deal.date)}</div>
                           </td>
                         </tr>
@@ -605,14 +605,14 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                     onClick={() => handleDealClick(deal)}
                     className="cursor-pointer transition-colors border-b border-border-subtle last:border-0 hover:bg-[rgba(232,225,217,0.3)]"
                   >
-                    <td className="px-4 py-3">
+                    <td>
                       <div className="flex items-center gap-2">
                         <div className="font-medium text-accent hover:text-accent-hover">
                           {deal.provider}
                         </div>
                         {deal.discoveredVia === 'exa' && (
                           <span 
-                            className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-sm font-mono"
+                            className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-none font-mono"
                             title={`Source: Exa${deal.exaQuery ? ` (${deal.exaQuery})` : ''}${deal.exaScore ? ` - Score: ${deal.exaScore.toFixed(2)}` : ''}`}
                           >
                             ARTICLE
@@ -620,7 +620,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                         )}
                         {deal.discoveredVia && deal.discoveredVia !== 'exa' && (
                           <span 
-                            className="text-[10px] px-1.5 py-0.5 bg-border-subtle text-text-muted rounded-sm"
+                            className="text-[10px] px-1.5 py-0.5 bg-border-subtle text-text-muted rounded-none"
                             title={`Discovered via ${deal.discoveredVia}`}
                           >
                             {deal.discoveredVia.toUpperCase()}
@@ -628,10 +628,10 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td>
                       <div className="text-sm">{deal.buyer}</div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td>
                       <span className="badge badge-secondary text-xs">{deal.modality}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -655,7 +655,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                         <span className="text-text-muted/40 text-xs">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td>
                       <div className="text-sm text-text-muted/80">{formatDate(deal.date)}</div>
                     </td>
                   </tr>
@@ -712,7 +712,7 @@ function PriceCellWithTooltip({ deal }: { deal: Deal }) {
         </div>
       </div>
       {showTooltip && (
-        <div className="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-sm shadow-lg p-3 min-w-[280px]">
+        <div className="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-none shadow-lg p-3 min-w-[280px]">
           <div className="text-xs font-semibold mb-2 text-text">Normalized Pricing</div>
           <div className="space-y-2">
             {normalizations.map((norm, idx) => (

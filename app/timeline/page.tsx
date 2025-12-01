@@ -208,8 +208,8 @@ export default async function TimelinePage() {
     <div className="min-h-screen bg-background">
       <div className="container-content section-padding">
         {/* Header */}
-        <div className="mb-9">
-          <h1 className="text-4xl font-semibold mb-2 tracking-tight">Major AI Training Data Deals (2020–2025)</h1>
+        <div className="mb-4">
+          <h1 className="text-3xl font-semibold mb-1 tracking-tight">Major AI Training Data Deals (2020–2025)</h1>
           <p className="text-text-muted text-sm mb-1">Tracking the emergence of data markets</p>
           <p className="text-text-muted text-xs font-medium">Source: Open Data Labs (opendatalabs.xyz)</p>
         </div>

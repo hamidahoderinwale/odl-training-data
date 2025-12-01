@@ -104,17 +104,17 @@ function FeedItemCard({ item }: { item: FeedItem }) {
   const isArticle = item.type === 'article' || (!isTwitter && item.url.startsWith('http'))
 
   return (
-    <div className="border border-border-subtle rounded-sm p-4 hover:border-border transition-colors">
+    <div className="border border-border-subtle rounded-none p-4 hover:border-border transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
             {isTwitter && (
-              <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-500 rounded-sm font-mono">
+              <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-500 rounded-none font-mono">
                 TWITTER
               </span>
             )}
             {isArticle && (
-              <span className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-sm font-mono">
+              <span className="text-[10px] px-1.5 py-0.5 bg-accent/20 text-accent rounded-none font-mono">
                 ARTICLE
               </span>
             )}
@@ -192,7 +192,7 @@ function FeedItemCard({ item }: { item: FeedItem }) {
         <div className="mt-3 pt-3 border-t border-border-subtle">
           <iframe
             src={item.url}
-            className="w-full h-64 border border-border-subtle rounded-sm"
+            className="w-full h-64 border border-border-subtle rounded-none"
             title={item.title || 'Article preview'}
             sandbox="allow-same-origin allow-scripts"
           />

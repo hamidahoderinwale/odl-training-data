@@ -25,6 +25,7 @@ from registry.collectors.epoch_collector import EpochCollector
 from registry.collectors.hf_collector import HuggingFaceCollector
 from registry.inference.reconciliation import TokenInferenceReconciler
 from registry.linkage import create_deal_model_linkages
+from registry.enrichment.comprehensive_enrichment import ComprehensiveModelEnricher
 from dotenv import load_dotenv
 
 # Prisma imports
@@ -41,11 +42,24 @@ load_dotenv()
 class PriorityModelIngester:
     """Programmatic ingester for priority models"""
     
-    def __init__(self):
+    def __init__(self, use_web_enrichment: bool = True):
         self.epoch_collector = EpochCollector()
         self.hf_collector = HuggingFaceCollector()
         self.inference_reconciler = TokenInferenceReconciler()
         self.prisma = None
+        
+        # Initialize comprehensive enricher if web enrichment enabled
+        if use_web_enrichment:
+            try:
+                self.comprehensive_enricher = ComprehensiveModelEnricher(
+                    use_web_search=True,
+                    use_llm_extraction=True
+                )
+            except Exception as e:
+                print(f"Warning: Comprehensive enricher initialization failed: {e}")
+                self.comprehensive_enricher = None
+        else:
+            self.comprehensive_enricher = None
         
     async def connect_db(self):
         """Connect to Prisma database"""
@@ -226,20 +240,63 @@ class PriorityModelIngester:
             where={"modelId": model_id}
         )
         
+        # Prepare data for Prisma (convert field names)
+        prisma_data = {}
+        
+        # Map field names from model_data to Prisma schema
+        field_mapping = {
+            "modelId": "modelId",
+            "provider": "provider",
+            "family": "family",
+            "params": "params",
+            "releaseDate": "releaseDate",
+            "architectureType": "architectureType",
+            "isMoe": "isMoe",
+            "numExperts": "numExperts",
+            "multimodal": "multimodal",
+            "tokensEstMin": "tokensEstMin",
+            "tokensEstMax": "tokensEstMax",
+            "tokensEstMid": "tokensEstMid",
+            "tokensRangeGeneratedAt": "tokensRangeGeneratedAt",
+            "evidenceTypes": "evidenceTypes",
+            "evidenceStrength": "evidenceStrength",
+            "uncertaintySources": "uncertaintySources",
+            "evidenceProfileGeneratedAt": "evidenceProfileGeneratedAt",
+            "sources": "sources",
+            "rawEvidenceSnippets": "rawEvidenceSnippets",
+            "compositionEstimates": "compositionEstimates",
+            "trainingPeriodStart": "trainingPeriodStart",
+            "trainingPeriodEnd": "trainingPeriodEnd",
+        }
+        
+        for key, value in model_data.items():
+            if key in field_mapping and value is not None:
+                prisma_key = field_mapping[key]
+                # Convert date strings to datetime if needed
+                if prisma_key in ["releaseDate", "tokensRangeGeneratedAt", "evidenceProfileGeneratedAt", "trainingPeriodStart", "trainingPeriodEnd"]:
+                    if isinstance(value, str):
+                        try:
+                            prisma_data[prisma_key] = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                        except:
+                            pass
+                    elif isinstance(value, datetime):
+                        prisma_data[prisma_key] = value
+                else:
+                    prisma_data[prisma_key] = value
+        
         if existing:
             # Update
+            prisma_data["updatedAt"] = datetime.now()
             updated = await self.prisma.modelregistry.update(
                 where={"id": existing.id},
-                data={
-                    **{k: v for k, v in model_data.items() if k != "modelId"},
-                    "updatedAt": datetime.now(),
-                }
+                data=prisma_data
             )
             return updated.id
         else:
             # Create
+            prisma_data["modelId"] = model_id
             created = await self.prisma.modelregistry.create(
-                data=model_data
+                data=prisma_data
             )
             return created.id
     
@@ -317,24 +374,40 @@ class PriorityModelIngester:
         
         print(f"\n📦 Processing: {model_id} ({provider})")
         
-        # Step 1: Fetch metadata
-        print(f"  🔍 Fetching metadata...")
+        # Step 1: Fetch metadata from Epoch and HF
+        print(f"  🔍 Fetching metadata from Epoch/HF...")
         epoch_data = await self.fetch_epoch_data(model_id, provider)
         hf_data = await self.fetch_hf_data(model_id, provider)
         
-        # Step 2: Merge metadata
+        # Step 2: Merge metadata from Epoch/HF
         model_data = self.merge_metadata(priority_model, epoch_data, hf_data)
         
-        # Step 3: Run token inference
+        # Step 3: Web enrichment (if enabled)
+        if self.comprehensive_enricher:
+            print(f"  🌐 Running web enrichment...")
+            try:
+                # Use comprehensive enricher which includes web search
+                enriched = await self.comprehensive_enricher.enrich_model(
+                    model_id=model_id,
+                    provider=provider,
+                    family=priority_model.get("family"),
+                    existing_data=model_data
+                )
+                # Merge web enrichment results
+                model_data.update(enriched)
+            except Exception as e:
+                print(f"    Warning: Web enrichment error: {e}")
+        
+        # Step 4: Run token inference
         print(f"  🧠 Running token inference...")
         inference_results = await self.run_token_inference(model_data)
         model_data.update(inference_results)
         
-        # Step 4: Store in database
+        # Step 5: Store in database
         print(f"  💾 Storing in database...")
         await self.upsert_model(model_data)
         
-        # Step 5: Create linkages
+        # Step 6: Create linkages
         print(f"  🔗 Creating deal linkages...")
         await self.create_linkages(model_id)
         

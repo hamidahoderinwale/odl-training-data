@@ -104,15 +104,15 @@ export default async function AnalyticsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container-content section-padding">
-        <div className="mb-8">
-          <h1 className="text-4xl font-semibold mb-4">Market Analytics</h1>
-          <p className="text-text-muted text-lg">
+        <div className="mb-4">
+          <h1 className="text-3xl font-semibold mb-1">Market Analytics</h1>
+          <p className="text-text-muted text-sm">
             Market structure, concentration, and trends
           </p>
         </div>
 
         {/* Key Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="stat-card">
             <div className="stat-value">{analytics.totalDeals}</div>
             <div className="stat-label">Total Deals</div>
@@ -132,8 +132,8 @@ export default async function AnalyticsPage() {
         </div>
 
         {/* Modality Breakdown */}
-        <div className="card mb-8">
-          <h2 className="text-2xl font-semibold mb-6">Deals by Modality</h2>
+        <div className="card mb-6">
+          <h2 className="text-xl font-semibold mb-4">Deals by Modality</h2>
           <div className="space-y-4">
             {Object.entries(analytics.modalityCounts)
               .sort(([, a], [, b]) => b - a)
@@ -152,9 +152,9 @@ export default async function AnalyticsPage() {
         </div>
 
         {/* Top Buyers */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div className="card">
-            <h2 className="text-2xl font-semibold mb-6">Top Buyers by Spend</h2>
+            <h2 className="text-xl font-semibold mb-4">Top Buyers by Spend</h2>
             <div className="space-y-4">
               {analytics.topBuyers.map((buyer, idx) => (
                 <div key={buyer.name} className="flex items-center justify-between py-2">
@@ -173,7 +173,7 @@ export default async function AnalyticsPage() {
 
           {/* Top Providers */}
           <div className="card">
-            <h2 className="text-2xl font-semibold mb-6">Top Providers by Spend</h2>
+            <h2 className="text-xl font-semibold mb-4">Top Providers by Spend</h2>
             <div className="space-y-4">
               {analytics.topProviders.map((provider, idx) => (
                 <div key={provider.name} className="flex items-center justify-between py-2">

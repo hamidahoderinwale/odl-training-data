@@ -176,11 +176,11 @@ export default async function Home() {
         {/* Auto-enrich notification */}
         <AutoEnrich dealCount={deals.length} dealsWithAllFields={dealsWithAllFields} />
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-semibold mb-2">Deals Explorer</h1>
-              <p className="text-text-muted text-lg">
+              <h1 className="text-3xl font-semibold mb-1">Deals Explorer</h1>
+              <p className="text-text-muted text-sm">
                 Global licensing, acquisition, and commissioning deals (2020–2025)
               </p>
             </div>
@@ -224,7 +224,7 @@ export default async function Home() {
           </div>
 
           {/* Scrollable Analytics Cards */}
-          <div className="overflow-x-auto pb-2 -mx-6 px-6">
+          <div className="overflow-x-auto pb-2 -mx-2 px-2">
             <div className="flex gap-4 min-w-max">
               {/* Modality Breakdown */}
               <div className="card min-w-[280px] flex-shrink-0">
