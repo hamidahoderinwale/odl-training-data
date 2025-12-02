@@ -17,26 +17,25 @@ export const dynamic = 'force-dynamic'
  * Alternative: Use POST /api/deals for direct Prisma access (faster)
  */
 export async function POST(request: Request) {
-  let dealData
   try {
-    dealData = await request.json()
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid JSON in request body' },
-      { status: 400 }
-    )
-  }
+    const dealData = await request.json()
 
-  try {
+    // Path to the add_deal script
     const addDealScript = path.join(process.cwd(), 'mcp-servers', 'add_deal.py')
+    
+    // Use virtual environment Python if it exists
     const venvPython = path.join(process.cwd(), 'venv', 'bin', 'python3')
     const pythonPath = process.env.PYTHON_PATH || (existsSync(venvPython) ? venvPython : 'python3')
+
+    // Escape JSON for command line
     const dealJson = JSON.stringify(dealData).replace(/'/g, "'\\''")
+
+    // Call Python script
     const command = `${pythonPath} ${addDealScript} '${dealJson}'`
 
-    const { stdout } = await execAsync(command, {
+    const { stdout, stderr } = await execAsync(command, {
       cwd: process.cwd(),
-      timeout: 30000,
+      timeout: 30000, // 30 seconds
       env: {
         ...process.env,
         PYTHONUNBUFFERED: '1',
@@ -44,6 +43,7 @@ export async function POST(request: Request) {
     })
 
     const result = JSON.parse(stdout)
+    
     return NextResponse.json({
       ...result,
       method: 'python_script',
@@ -52,7 +52,9 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('MCP deal upsert error:', error)
     
+    // Fallback to direct API if Python script fails
     try {
+      const dealData = await request.json()
       const response = await fetch(`${request.url.replace('/api/mcp/deals', '/api/deals')}`, {
         method: 'POST',
         headers: {
@@ -80,14 +82,7 @@ export async function POST(request: Request) {
 }
 
 /**
- * GET /api/mcp/deals - Query deals (compatibility endpoint)
- * 
- * This endpoint redirects to /api/deals for direct Prisma access.
- * The MCP Database Server is available for AI assistant integration via stdio,
- * but web APIs use direct database access for better performance.
- * 
- * For actual MCP protocol usage, connect to mcp-servers/database/server.py
- * via MCP client (e.g., from Claude Desktop or other AI assistants).
+ * GET /api/mcp/deals - Query deals via MCP Database Server
  */
 export async function GET(request: Request) {
   try {
@@ -98,7 +93,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    // Redirect to main /api/deals endpoint (direct Prisma access)
+    // Redirect to main /api/deals endpoint
     const params = new URLSearchParams()
     if (provider) params.set('provider', provider)
     if (buyer) params.set('buyer', buyer)
@@ -111,8 +106,7 @@ export async function GET(request: Request) {
     
     return NextResponse.json({
       ...result,
-      method: 'direct_api',
-      note: 'MCP servers available for AI assistant integration via stdio',
+      method: 'mcp_api',
     })
   } catch (error: any) {
     console.error('MCP deal query error:', error)

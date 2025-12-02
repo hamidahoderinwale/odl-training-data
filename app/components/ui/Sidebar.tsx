@@ -1,16 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const navItems = [
     {
@@ -30,8 +24,8 @@ export default function Sidebar() {
       label: 'Linkages',
     },
     {
-      href: '/help',
-      label: 'Help',
+      href: '/analytics',
+      label: 'Analytics',
     },
   ]
 
@@ -43,8 +37,7 @@ export default function Sidebar() {
       <nav className="p-2">
         <ul className="space-y-1">
           {navItems.map((item) => {
-            // Only check active state after hydration to prevent mismatch
-            const isActive = mounted && pathname === item.href
+            const isActive = pathname === item.href
             return (
               <li key={item.href}>
                 <Link

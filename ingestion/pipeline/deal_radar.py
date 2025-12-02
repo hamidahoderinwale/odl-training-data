@@ -10,7 +10,7 @@ from datetime import datetime
 class DealRadar:
     """Classify text as describing an AI data licensing deal"""
     
-    # Expanded trigger phrases for better coverage
+    # Trigger phrases
     TRIGGER_PHRASES = [
         "training data",
         "licensing agreement",
@@ -26,58 +26,17 @@ class DealRadar:
         "content licensing",
         "archive access",
         "data feed",
-        "AI training",
-        "model training",
-        "data license",
-        "content deal",
-        "data agreement",
-        "partnership agreement",
-        "licensing deal",
-        "data access",
-        "content access",
-        "training dataset",
-        "AI data",
-        "machine learning dataset",
-        "neural network training",
-        "language model training",
-        "generative AI training",
-        "data acquisition",
-        "content acquisition",
-        "exclusive license",
-        "non-exclusive license",
-        "revenue share",
-        "royalty agreement",
-        "data monetization",
-        "content monetization",
     ]
     
-    # Expanded AI company indicators
+    # Company indicators
     AI_COMPANIES = [
         "OpenAI", "Google", "Anthropic", "Meta", "Microsoft",
-        "Amazon", "Apple", "Cohere", "Mistral", "Inflection",
-        "xAI", "Stability AI", "Midjourney", "Runway", "Pika",
-        "Perplexity", "Character.AI", "Jasper", "Copy.ai",
-        "Scale AI", "Hugging Face", "ElevenLabs", "Suno",
-        "Mubert", "Music.AI", "DeepMind", "Google DeepMind",
-        "AWS", "Azure", "Salesforce", "Adobe", "Nvidia",
+        "Amazon", "Apple", "Cohere", "Mistral", "Inflection"
     ]
     
-    # Expanded data provider indicators
     DATA_PROVIDERS = [
         "Reddit", "News Corp", "Associated Press", "Shutterstock",
-        "Getty Images", "Dotdash", "HarperCollins", "Wiley",
-        "Reuters", "Bloomberg", "Wall Street Journal", "New York Times",
-        "Washington Post", "The Guardian", "Financial Times",
-        "Le Monde", "Axel Springer", "Gannett", "Gannett",
-        "Dotdash Meredith", "IAC", "Vox Media", "BuzzFeed",
-        "Universal Music Group", "Warner Music", "Sony Music",
-        "Spotify", "YouTube", "TikTok", "Twitter", "X.com",
-        "GitHub", "Stack Overflow", "Wikipedia", "Wikimedia",
-        "Freepik", "Unsplash", "Pexels", "Pixabay",
-        "CuriosityStream", "Netflix", "Disney", "Paramount",
-        "Tempus", "23andMe", "Ancestry", "LabCorp",
-        "Authors", "Publishers", "Book publishers",
-        "News publishers", "Media companies",
+        "Getty Images", "Dotdash", "HarperCollins", "Wiley"
     ]
     
     def __init__(self):
@@ -149,8 +108,8 @@ class DealRadar:
         if trigger_matches >= 2:
             confidence += 0.1
         
-        # Classify (lowered threshold to catch more deals)
-        is_deal = confidence >= 0.4  # Lowered from 0.5 to be more inclusive
+        # Classify
+        is_deal = confidence >= 0.5
         
         return {
             "is_deal": is_deal,

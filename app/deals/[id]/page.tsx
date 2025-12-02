@@ -54,7 +54,7 @@ export default async function DealDetailPage({
     <main className="min-h-screen bg-background">
       <div className="container-content section-padding">
         <Link
-          href="/"
+          href="/deals"
           className="text-accent hover:text-accent-hover mb-6 inline-block"
         >
           ← Back to Deals

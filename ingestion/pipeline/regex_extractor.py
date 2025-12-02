@@ -221,7 +221,7 @@ class RegexExtractor:
         
         pricing_mechanism = self.extract_pricing_mechanism(text)
         if pricing_mechanism:
-            extracted["pricing_mechanism"] = pricing_mechanism.get("pricing_mechanism") if isinstance(pricing_mechanism, dict) else pricing_mechanism
+            extracted["pricing_mechanism"] = pricing_mechanism
         
         modality = self.extract_modality(text)
         if modality:

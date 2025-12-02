@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect } from 'react'
+import React from 'react'
 import DealModal from './DealModal'
 import type { Deal } from '@/lib/types/deal'
 import Tooltip from '@/app/components/ui/Tooltip'
@@ -89,70 +90,42 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
     return true
   })
 
-  // Sort deals with improved logic
+  // Sort deals
   const sortedDeals = [...filteredDeals].sort((a, b) => {
     const { column, direction } = sortBy
     let comparison = 0
 
     switch (column) {
       case 'provider':
-        // A-Z / Z-A text sorting
-        const providerA = (a.provider || '').toLowerCase().trim()
-        const providerB = (b.provider || '').toLowerCase().trim()
-        comparison = providerA.localeCompare(providerB, undefined, { numeric: true, sensitivity: 'base' })
+        comparison = a.provider.localeCompare(b.provider)
         break
       case 'buyer':
-        // A-Z / Z-A text sorting
-        const buyerA = (a.buyer || '').toLowerCase().trim()
-        const buyerB = (b.buyer || '').toLowerCase().trim()
-        comparison = buyerA.localeCompare(buyerB, undefined, { numeric: true, sensitivity: 'base' })
+        comparison = a.buyer.localeCompare(b.buyer)
         break
       case 'modality':
-        // A-Z / Z-A text sorting
-        const modalityA = (a.modality || '').toLowerCase().trim()
-        const modalityB = (b.modality || '').toLowerCase().trim()
-        comparison = modalityA.localeCompare(modalityB, undefined, { numeric: true, sensitivity: 'base' })
+        comparison = a.modality.localeCompare(b.modality)
         break
       case 'price':
-        // Numeric sorting: nulls/undefined go to end
-        const priceA = a.priceUsd ?? a.priceRangeMinUsd ?? null
-        const priceB = b.priceUsd ?? b.priceRangeMinUsd ?? null
-        if (priceA === null && priceB === null) comparison = 0
-        else if (priceA === null) comparison = 1
-        else if (priceB === null) comparison = -1
-        else comparison = priceA - priceB
+        const priceA = a.priceUsd || a.priceRangeMinUsd || 0
+        const priceB = b.priceUsd || b.priceRangeMinUsd || 0
+        comparison = priceA - priceB
         break
       case 'exclusive':
-        // Boolean sorting: true first, then false, then null
-        const exclusiveA = a.exclusive === true ? 2 : a.exclusive === false ? 1 : 0
-        const exclusiveB = b.exclusive === true ? 2 : b.exclusive === false ? 1 : 0
+        const exclusiveA = a.exclusive === true ? 1 : a.exclusive === false ? 0 : -1
+        const exclusiveB = b.exclusive === true ? 1 : b.exclusive === false ? 0 : -1
         comparison = exclusiveA - exclusiveB
         break
       case 'creatorsCompensated':
-        // Boolean sorting: true first, then false, then null
-        const compA = a.creatorsCompensated === true ? 2 : a.creatorsCompensated === false ? 1 : 0
-        const compB = b.creatorsCompensated === true ? 2 : b.creatorsCompensated === false ? 1 : 0
+        const compA = a.creatorsCompensated === true ? 1 : a.creatorsCompensated === false ? 0 : -1
+        const compB = b.creatorsCompensated === true ? 1 : b.creatorsCompensated === false ? 0 : -1
         comparison = compA - compB
         break
       case 'date':
       default:
-        // Date sorting: extract year for comparison, nulls go to end
-        const dateA = a.date || ''
-        const dateB = b.date || ''
-        if (!dateA && !dateB) comparison = 0
-        else if (!dateA) comparison = 1
-        else if (!dateB) comparison = -1
-        else {
-          // Extract year for better sorting
-          const yearA = dateA.match(/\b(20\d{2})\b/)?.[1] || '0000'
-          const yearB = dateB.match(/\b(20\d{2})\b/)?.[1] || '0000'
-          if (yearA !== yearB) {
-            comparison = yearA.localeCompare(yearB)
-          } else {
-            // Same year, compare full date string
-            comparison = dateA.localeCompare(dateB)
-          }
-        }
+        if (!a.date && !b.date) comparison = 0
+        else if (!a.date) comparison = 1
+        else if (!b.date) comparison = -1
+        else comparison = a.date.localeCompare(b.date)
         break
     }
 
@@ -269,17 +242,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
 
   const getSortIndicator = (column: string) => {
     if (sortBy.column !== column) return null
-    // Column-specific sort indicators
-    if (column === 'price') {
-      return sortBy.direction === 'asc' ? '↑ Low→High' : '↓ High→Low'
-    }
-    if (column === 'date') {
-      return sortBy.direction === 'asc' ? '↑ Old→New' : '↓ New→Old'
-    }
-    if (column === 'exclusive' || column === 'creatorsCompensated') {
-      return sortBy.direction === 'asc' ? '↑ No→Yes' : '↓ Yes→No'
-    }
-    return sortBy.direction === 'asc' ? '↑ A→Z' : '↓ Z→A'
+    return sortBy.direction === 'asc' ? '↑' : '↓'
   }
 
   return (
@@ -540,7 +503,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                   const groupTotal = groupDeals.reduce((sum, d) => sum + (d.priceUsd || d.priceRangeMinUsd || 0), 0)
                   
                   return (
-                    <Fragment key={groupKey}>
+                    <React.Fragment key={groupKey}>
                       <tr
                         onClick={() => toggleGroup(groupKey)}
                         className="cursor-pointer bg-border-subtle hover:bg-border transition-colors"
@@ -631,7 +594,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                           </td>
                         </tr>
                       ))}
-                    </Fragment>
+                    </React.Fragment>
                   )
                 })
               ) : (
