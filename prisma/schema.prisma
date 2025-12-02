@@ -5,6 +5,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator python {
+  provider = "prisma-client-py"
+}
+
 datasource db {
   provider = "sqlite" // Start with SQLite for MVP, easy migration to Postgres later
   url      = env("DATABASE_URL")
