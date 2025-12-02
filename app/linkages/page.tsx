@@ -123,3 +123,7 @@ export default async function LinkagesPage() {
         ) : (
           <LinkagesClient initialLinkages={linkages.filter(l => l && l.deal && l.model)} />
         )}
+      </div>
+    </main>
+  )
+}

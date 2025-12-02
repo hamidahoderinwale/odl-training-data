@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import React from 'react'
-import Link from 'next/link'
-import { formatDate } from '@/lib/utils/utils'
 import Tooltip from '@/app/components/ui/Tooltip'
+import LinkageRow from './LinkageRow'
 
 interface Linkage {
   id: string
@@ -32,13 +31,6 @@ interface LinkagesClientProps {
   initialLinkages: Linkage[]
 }
 
-function formatTokens(value: number | null | undefined): string {
-  if (!value) return '—'
-  if (value >= 1e15) return `${(value / 1e15).toFixed(1)}P`
-  if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`
-  if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`
-  return `${(value / 1e6).toFixed(0)}M`
-}
 
 export default function LinkagesClient({ initialLinkages }: LinkagesClientProps) {
   const [linkages] = useState<Linkage[]>(initialLinkages)
@@ -469,73 +461,7 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
                         </td>
                       </tr>
                       {isExpanded && groupLinkages.map((linkage) => (
-                        <tr
-                          key={linkage.id}
-                          className="transition-colors border-b border-border-subtle last:border-0 hover:bg-[rgba(232,225,217,0.3)]"
-                        >
-                          <td className="pl-6">
-                            <Link
-                              href={`/deals/${linkage.deal.id}`}
-                              className="font-medium text-accent hover:text-accent-hover"
-                            >
-                              {linkage.deal.provider} → {linkage.deal.buyer}
-                            </Link>
-                            <div className="text-xs text-text-muted mt-0.5">
-                              {linkage.deal.modality} • {linkage.deal.date ? formatDate(linkage.deal.date) : '—'}
-                            </div>
-                          </td>
-                          <td>
-                            <Link
-                              href={`/models/${linkage.model.id}`}
-                              className="font-medium text-accent hover:text-accent-hover"
-                            >
-                              {linkage.model.modelId}
-                            </Link>
-                            {linkage.model.family && (
-                              <div className="text-xs text-text-muted mt-0.5">
-                                {linkage.model.family} • {linkage.model.provider}
-                              </div>
-                            )}
-                            {linkage.model.tokensEstMid && (
-                              <div className="text-xs text-text-muted mt-0.5">
-                                {formatTokens(linkage.model.tokensEstMid)} tokens
-                              </div>
-                            )}
-                          </td>
-                          <td>
-                            <div className="flex flex-col gap-1">
-                              <span className="badge badge-secondary text-xs">
-                                {linkage.linkageType === 'temporal_overlap' ? 'Same Time Period' : 
-                                 linkage.linkageType === 'inferred' ? 'Same Company' : 
-                                 linkage.linkageType || '—'}
-                              </span>
-                              <div className="text-xs text-text-muted/70">
-                                {linkage.linkageType === 'temporal_overlap' 
-                                  ? 'Deal & model within 1 year'
-                                  : linkage.linkageType === 'inferred'
-                                  ? 'Buyer matches model provider'
-                                  : ''}
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span className={`badge ${
-                              linkage.linkageStrength === 'high' 
-                                ? 'badge-primary' 
-                                : 'badge-secondary'
-                            } text-xs`}>
-                              {linkage.linkageStrength === 'high' ? 'High' : 
-                               linkage.linkageStrength === 'medium' ? 'Medium' : 
-                               linkage.linkageStrength === 'low' ? 'Low' : 
-                               '—'}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="text-sm text-text leading-relaxed">
-                              {linkage.impactInference || '—'}
-                            </div>
-                          </td>
-                        </tr>
+                        <LinkageRow key={linkage.id} linkage={linkage} indent />
                       ))}
                     </React.Fragment>
                   )
@@ -543,73 +469,7 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
               ) : (
                 // Ungrouped view
                 sortedLinkages.map((linkage) => (
-                  <tr
-                    key={linkage.id}
-                    className="transition-colors border-b border-border-subtle last:border-0 hover:bg-[rgba(232,225,217,0.3)]"
-                  >
-                    <td>
-                      <Link
-                        href={`/deals/${linkage.deal.id}`}
-                        className="font-medium text-accent hover:text-accent-hover"
-                      >
-                        {linkage.deal.provider} → {linkage.deal.buyer}
-                      </Link>
-                      <div className="text-xs text-text-muted mt-0.5">
-                        {linkage.deal.modality} • {linkage.deal.date ? formatDate(linkage.deal.date) : '—'}
-                      </div>
-                    </td>
-                    <td>
-                      <Link
-                        href={`/models/${linkage.model.id}`}
-                        className="font-medium text-accent hover:text-accent-hover"
-                      >
-                        {linkage.model.modelId}
-                      </Link>
-                      {linkage.model.family && (
-                        <div className="text-xs text-text-muted mt-0.5">
-                          {linkage.model.family} • {linkage.model.provider}
-                        </div>
-                      )}
-                      {linkage.model.tokensEstMid && (
-                        <div className="text-xs text-text-muted mt-0.5">
-                          {formatTokens(linkage.model.tokensEstMid)} tokens
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <div className="flex flex-col gap-1">
-                        <span className="badge badge-secondary text-xs">
-                          {linkage.linkageType === 'temporal_overlap' ? 'Same Time Period' : 
-                           linkage.linkageType === 'inferred' ? 'Same Company' : 
-                           linkage.linkageType || '—'}
-                        </span>
-                        <div className="text-xs text-text-muted/70">
-                          {linkage.linkageType === 'temporal_overlap' 
-                            ? 'Deal & model within 1 year'
-                            : linkage.linkageType === 'inferred'
-                            ? 'Buyer matches model provider'
-                            : ''}
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`badge ${
-                        linkage.linkageStrength === 'high' 
-                          ? 'badge-primary' 
-                          : 'badge-secondary'
-                      } text-xs`}>
-                        {linkage.linkageStrength === 'high' ? 'High' : 
-                         linkage.linkageStrength === 'medium' ? 'Medium' : 
-                         linkage.linkageStrength === 'low' ? 'Low' : 
-                         '—'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="text-sm text-text leading-relaxed">
-                        {linkage.impactInference || '—'}
-                      </div>
-                    </td>
-                  </tr>
+                  <LinkageRow key={linkage.id} linkage={linkage} />
                 ))
               )}
             </tbody>

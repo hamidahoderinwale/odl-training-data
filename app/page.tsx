@@ -50,6 +50,10 @@ async function getDeals() {
       exaScore: true,
       discoveryDate: true,
       durationYears: true,
+      dealStage: true,
+      confidenceScore: true,
+      startDate: true,
+      endDate: true,
     },
   })
   // Convert Date objects to ISO strings and enrich with inferred metadata
@@ -58,6 +62,8 @@ async function getDeals() {
     return {
       ...deal,
       discoveryDate: deal.discoveryDate?.toISOString() || null,
+      startDate: deal.startDate?.toISOString() || null,
+      endDate: deal.endDate?.toISOString() || null,
       // Merge enriched fields only if they're missing
       dealType: deal.dealType || enriched.dealType || null,
       pricingMechanism: deal.pricingMechanism || enriched.pricingMechanism || null,

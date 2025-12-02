@@ -145,6 +145,8 @@ class ComprehensiveModelEnricher:
                     },
                     "provider": provider,
                     "model_id": model_id,
+                    "openDataTokensReported": merged.get("openDataTokensReported"),
+                    "sources": merged.get("sources"),
                 }
                 inference_result = self.inference_reconciler.reconcile(inference_input)
                 
@@ -153,6 +155,14 @@ class ComprehensiveModelEnricher:
                 merged["tokensEstMax"] = inference_result.get("max")
                 merged["tokensEstMid"] = inference_result.get("mid")
                 merged["tokensRangeGeneratedAt"] = datetime.now()
+                
+                # Add estimation metadata
+                if inference_result.get("estimation_methods"):
+                    merged["estimationMethod"] = json.dumps(inference_result.get("estimation_methods"))
+                if inference_result.get("estimation_confidence") is not None:
+                    merged["estimationConfidence"] = inference_result.get("estimation_confidence")
+                merged["estimationDate"] = datetime.now()
+                merged["estimationVersion"] = "2.0"
             except Exception as e:
                 print(f"Token inference error: {e}")
         
@@ -272,8 +282,21 @@ class ComprehensiveModelEnricher:
                 merged["isMoe"] = web_data.get("is_moe")
             if web_data.get("num_experts"):
                 merged["numExperts"] = web_data.get("num_experts")
+            if web_data.get("active_experts"):
+                merged["activeExperts"] = web_data.get("active_experts")
             if web_data.get("multimodal") is not None:
                 merged["multimodal"] = web_data.get("multimodal")
+            # Parameters from web search (only if not already set)
+            if not merged.get("params") and web_data.get("params"):
+                merged["params"] = web_data.get("params")
+            if web_data.get("params_active"):
+                merged["paramsActive"] = web_data.get("params_active")
+            # FLOPs from web search
+            if not merged.get("flopsReported") and web_data.get("flops_reported"):
+                merged["flopsReported"] = web_data.get("flops_reported")
+            if not merged.get("flopsEstimated") and web_data.get("flops_estimated"):
+                merged["flopsEstimated"] = web_data.get("flops_estimated")
+            # Training period
             if web_data.get("training_period_start"):
                 merged["trainingPeriodStart"] = self._parse_date(web_data.get("training_period_start"))
             if web_data.get("training_period_end"):

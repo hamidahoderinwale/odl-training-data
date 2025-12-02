@@ -16,100 +16,100 @@ datasource db {
 
 // Core Deals table - matches your provided table structure + temporal metadata
 model Deal {
-  id                    String   @id @default(uuid()) // UUID for new deals, custom IDs allowed in seed
-  date                  String?  // "2024-05-22" or "2024" or "2021-2024"
-  period                String?  // For ranges like "2021-2024"
-  
+  id     String  @id @default(uuid()) // UUID for new deals, custom IDs allowed in seed
+  date   String? // "2024-05-22" or "2024" or "2021-2024"
+  period String? // For ranges like "2021-2024"
+
   // Temporal metadata
   announcementDate      DateTime? @map("announcement_date")
   effectiveStartDate    DateTime? @map("effective_start_date")
-  effectiveEndDate       DateTime? @map("effective_end_date")
+  effectiveEndDate      DateTime? @map("effective_end_date")
   discoveryDate         DateTime? @map("discovery_date")
   lastVerified          DateTime? @map("last_verified")
   sourcePublicationDate DateTime? @map("source_publication_date")
-  
-  modality              String   // "Text", "Image", "Audio", "Video", "Satellite", etc.
-  provider              String
-  buyer                 String   // Can be comma-separated for multiple buyers
-  dataType              String   @map("data_type") // Short description
-  reportedTerms         String?  @map("reported_terms") // Headline terms
-  creatorsCompensated    Boolean? @map("creators_compensated") // Yes/No/Unclear
-  exclusive             Boolean? // Yes/No/N/A
-  pricingMechanism      String   @map("pricing_mechanism")
-  
+
+  modality            String // "Text", "Image", "Audio", "Video", "Satellite", etc.
+  provider            String
+  buyer               String // Can be comma-separated for multiple buyers
+  dataType            String   @map("data_type") // Short description
+  reportedTerms       String?  @map("reported_terms") // Headline terms
+  creatorsCompensated Boolean? @map("creators_compensated") // Yes/No/Unclear
+  exclusive           Boolean? // Yes/No/N/A
+  pricingMechanism    String   @map("pricing_mechanism")
+
   // Enhanced content metadata
-  contentType           String?  @map("content_type") // text, image, audio, etc.
-  volumeDescription     String?  @map("volume_description")
-  updateFrequency       String?  @map("update_frequency") // streaming, batch, one-time
-  historicalArchiveAccess Boolean? @map("historical_archive_access") @default(false)
-  
+  contentType             String?  @map("content_type") // text, image, audio, etc.
+  volumeDescription       String?  @map("volume_description")
+  updateFrequency         String?  @map("update_frequency") // streaming, batch, one-time
+  historicalArchiveAccess Boolean? @default(false) @map("historical_archive_access")
+
   // Pricing structure (JSON)
-  pricingStructure     String?  @map("pricing_structure") // JSON: {headline_price, currency, billing_interval, estimated_unit_cost}
-  billingInterval       String?  @map("billing_interval") // annual, monthly, one-time
-  estimatedUnitCost     String?  @map("estimated_unit_cost") // per 1000 API calls, etc.
-  
+  pricingStructure  String? @map("pricing_structure") // JSON: {headline_price, currency, billing_interval, estimated_unit_cost}
+  billingInterval   String? @map("billing_interval") // annual, monthly, one-time
+  estimatedUnitCost String? @map("estimated_unit_cost") // per 1000 API calls, etc.
+
   // Linkages metadata (JSON)
-  linkagesMetadata      String?  @map("linkages_metadata") // JSON: {likely_used_by_models, impact_on_training_data, modality_integration, feed_type}
-  
+  linkagesMetadata String? @map("linkages_metadata") // JSON: {likely_used_by_models, impact_on_training_data, modality_integration, feed_type}
+
   // Extended fields from your schema plan
-  dealType              String?  @map("deal_type") // aggregate, per-unit, commissioning, etc.
-  priceUsd              Float?   @map("price_usd")
-  priceRangeMinUsd      Float?   @map("price_range_min_usd")
-  priceRangeMaxUsd      Float?   @map("price_range_max_usd")
-  priceCurrency         String?  @map("price_currency") @default("USD")
-  durationYears         Float?   @map("duration_years")
-  startDate             DateTime? @map("start_date")
-  endDate               DateTime? @map("end_date")
-  
+  dealType         String?   @map("deal_type") // aggregate, per-unit, commissioning, etc.
+  priceUsd         Float?    @map("price_usd")
+  priceRangeMinUsd Float?    @map("price_range_min_usd")
+  priceRangeMaxUsd Float?    @map("price_range_max_usd")
+  priceCurrency    String?   @default("USD") @map("price_currency")
+  durationYears    Float?    @map("duration_years")
+  startDate        DateTime? @map("start_date")
+  endDate          DateTime? @map("end_date")
+
   // Rights & restrictions
   trainingAllowed       Boolean? @map("training_allowed")
   finetuningAllowed     Boolean? @map("finetuning_allowed")
   inferenceAllowed      Boolean? @map("inference_allowed")
   redistributionAllowed Boolean? @map("redistribution_allowed")
   deletionRequired      Boolean? @map("deletion_required")
-  
+
   // Compensation details
-  creatorSplitPercentage Float? @map("creator_split_percentage")
-  revenueShare          Boolean? @map("revenue_share")
-  
+  creatorSplitPercentage Float?   @map("creator_split_percentage")
+  revenueShare           Boolean? @map("revenue_share")
+
   // Provenance & Discovery
-  sources               String   // JSON array of URLs
-  sourcePrimary         String?  @map("source_primary") // "Reuters", "SEC filing", etc.
-  discoveredVia         String?  @map("discovered_via") // exa, manual, filing, etc.
-  exaQuery              String?  @map("exa_query")
-  exaScore              Float?   @map("exa_score")
-  exaRetrievedAt        DateTime? @map("exa_retrieved_at")
-  
+  sources        String // JSON array of URLs
+  sourcePrimary  String?   @map("source_primary") // "Reuters", "SEC filing", etc.
+  discoveredVia  String?   @map("discovered_via") // exa, manual, filing, etc.
+  exaQuery       String?   @map("exa_query")
+  exaScore       Float?    @map("exa_score")
+  exaRetrievedAt DateTime? @map("exa_retrieved_at")
+
   // Extraction metadata
-  extractionMetadata    String?  @map("extraction_metadata") // JSON
-  rawTextSnippets       String?  @map("raw_text_snippets") // JSON array
-  regexConfidence       String?  @map("regex_confidence") // high, medium, low
-  llmConfidence         String?  @map("llm_confidence") // high, medium, low
-  lastExtracted         DateTime? @map("last_extracted")
-  
-  notes                 String?
-  dealStage             String?  @map("deal_stage") @default("confirmed") // announced, rumored, confirmed, settled
-  confidenceScore       Float?   @map("confidence_score") @default(1.0) // 0-1
-  
+  extractionMetadata String?   @map("extraction_metadata") // JSON
+  rawTextSnippets    String?   @map("raw_text_snippets") // JSON array
+  regexConfidence    String?   @map("regex_confidence") // high, medium, low
+  llmConfidence      String?   @map("llm_confidence") // high, medium, low
+  lastExtracted      DateTime? @map("last_extracted")
+
+  notes           String?
+  dealStage       String? @default("confirmed") @map("deal_stage") // announced, rumored, confirmed, settled
+  confidenceScore Float?  @default(1.0) @map("confidence_score") // 0-1
+
   // Linkages to models
-  modelLinkages         DealModelLinkage[]
-  
+  modelLinkages DealModelLinkage[]
+
   // Relations
-  providerRelation      Provider? @relation(fields: [providerId], references: [id])
-  providerId            String?   @map("provider_id")
-  
-  buyerRelations        DealBuyer[]
-  
+  providerRelation Provider? @relation(fields: [providerId], references: [id])
+  providerId       String?   @map("provider_id")
+
+  buyerRelations DealBuyer[]
+
   // Pricing normalization
   pricingNormalizations PricingNormalization[]
-  
+
   // Versioning
-  version               String?  @default("1.0")
-  
+  version String? @default("1.0")
+
   // Timestamps
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@index([provider])
   @@index([buyer])
   @@index([modality])
@@ -122,65 +122,71 @@ model Deal {
 
 // Model Registry table
 model ModelRegistry {
-  id                    String   @id @default(uuid())
-  modelId               String   @unique @map("model_id")
-  family                String?
-  provider              String
-  releaseDate            DateTime? @map("release_date")
-  lastUpdated            DateTime? @map("last_updated")
-  
+  id          String    @id @default(uuid())
+  modelId     String    @unique @map("model_id")
+  family      String?
+  provider    String
+  releaseDate DateTime? @map("release_date")
+  lastUpdated DateTime? @map("last_updated")
+
   // Parameters
-  params                Float?   // in billions
-  paramsActive          Float?   @map("params_active") // for MoE
-  
+  params       Float? // in billions
+  paramsActive Float? @map("params_active") // for MoE
+
   // Architecture
-  architectureType      String?  @map("architecture_type")
-  isMoe                 Boolean? @default(false) @map("is_moe")
-  numExperts            Int?     @map("num_experts")
-  activeExperts         Int?     @map("active_experts")
-  longContext           Int?     @map("long_context")
-  multimodal            Boolean? @default(false)
-  
+  architectureType String?  @map("architecture_type")
+  isMoe            Boolean? @default(false) @map("is_moe")
+  numExperts       Int?     @map("num_experts")
+  activeExperts    Int?     @map("active_experts")
+  longContext      Int?     @map("long_context")
+  multimodal       Boolean? @default(false)
+
   // Training compute
-  flopsReported         Float?   @map("flops_reported")
-  flopsEstimated        Float?   @map("flops_estimated")
-  computeSources        String?  @map("compute_sources") // JSON array
-  
+  flopsReported  Float?  @map("flops_reported")
+  flopsEstimated Float?  @map("flops_estimated")
+  computeSources String? @map("compute_sources") // JSON array
+
   // Token estimates
-  tokensEstMin          Float?   @map("tokens_est_min")
-  tokensEstMax          Float?   @map("tokens_est_max")
-  tokensEstMid          Float?   @map("tokens_est_mid")
+  tokensEstMin           Float?    @map("tokens_est_min")
+  tokensEstMax           Float?    @map("tokens_est_max")
+  tokensEstMid           Float?    @map("tokens_est_mid")
   tokensRangeGeneratedAt DateTime? @map("tokens_range_generated_at")
-  openDataTokensReported Float? @map("open_data_tokens_reported")
-  
+  openDataTokensReported Float?    @map("open_data_tokens_reported")
+
+  // Estimation metadata
+  estimationMethod     String?   @map("estimation_method") // JSON array of methods used
+  estimationConfidence Float?    @map("estimation_confidence") // 0-1 confidence score
+  estimationDate       DateTime? @map("estimation_date")
+  estimationVersion    String?   @default("1.0") @map("estimation_version")
+
   // Evidence profile
-  evidenceTypes         String?  @map("evidence_types") // JSON array
-  evidenceStrength      String?  @map("evidence_strength") // S-High, S-Medium, S-Low
-  uncertaintySources    String?  @map("uncertainty_sources") // JSON array
+  evidenceTypes              String?   @map("evidence_types") // JSON array
+  evidenceStrength           String?   @map("evidence_strength") // S-High, S-Medium, S-Low
+  uncertaintySources         String?   @map("uncertainty_sources") // JSON array
   evidenceProfileGeneratedAt DateTime? @map("evidence_profile_generated_at")
-  
+
   // Data composition
-  compositionEstimates  String?  @map("composition_estimates") // JSON
-  
+  compositionEstimates String? @map("composition_estimates") // JSON
+
   // Sources
-  sources               String? // JSON array
-  rawEvidenceSnippets   String?  @map("raw_evidence_snippets") // JSON array
-  
+  sources             String? // JSON array
+  rawEvidenceSnippets String? @map("raw_evidence_snippets") // JSON array
+
   // Temporal
-  trainingPeriodStart   DateTime? @map("training_period_start")
-  trainingPeriodEnd     DateTime? @map("training_period_end")
-  inferenceGeneratedAt  DateTime? @map("inference_generated_at")
-  
+  trainingPeriodStart  DateTime? @map("training_period_start")
+  trainingPeriodEnd    DateTime? @map("training_period_end")
+  inferenceGeneratedAt DateTime? @map("inference_generated_at")
+
   // Versioning
-  version               String?  @default("1.0")
-  
+  version String? @default("1.0")
+
   // Linkages
-  modelLinkages         DealModelLinkage[]
-  
+  modelLinkages DealModelLinkage[]
+
   // Timestamps
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
-  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@index([modelId])
   @@index([provider])
   @@index([releaseDate])
@@ -189,17 +195,17 @@ model ModelRegistry {
 
 // Linkage between deals and models
 model DealModelLinkage {
-  id                    String   @id @default(uuid())
-  dealId                String   @map("deal_id")
-  modelId               String   @map("model_id")
-  linkageType           String   @map("linkage_type") // temporal_overlap, inferred, explicit
-  linkageStrength       String   @map("linkage_strength") // high, medium, low
-  impactInference       String?  @map("impact_inference")
-  analysisTimestamp     DateTime @map("analysis_timestamp") @default(now())
-  
-  deal                  Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  model                 ModelRegistry @relation(fields: [modelId], references: [id], onDelete: Cascade)
-  
+  id                String   @id @default(uuid())
+  dealId            String   @map("deal_id")
+  modelId           String   @map("model_id")
+  linkageType       String   @map("linkage_type") // temporal_overlap, inferred, explicit
+  linkageStrength   String   @map("linkage_strength") // high, medium, low
+  impactInference   String?  @map("impact_inference")
+  analysisTimestamp DateTime @default(now()) @map("analysis_timestamp")
+
+  deal  Deal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  model ModelRegistry @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
   @@unique([dealId, modelId])
   @@index([dealId])
   @@index([modelId])
@@ -208,80 +214,79 @@ model DealModelLinkage {
 
 // Provider table (normalized)
 model Provider {
-  id                    String   @id @default(uuid())
-  name                  String   @unique
-  industry              String?
-  country               String?
-  annualRevenue         Float?   @map("annual_revenue")
-  contentType           String?  @map("content_type")
-  ownershipStructure    String?  @map("ownership_structure") // publisher, creator-owned, platform, commons
-  
-  deals                 Deal[]
-  
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
-  
+  id                 String  @id @default(uuid())
+  name               String  @unique
+  industry           String?
+  country            String?
+  annualRevenue      Float?  @map("annual_revenue")
+  contentType        String? @map("content_type")
+  ownershipStructure String? @map("ownership_structure") // publisher, creator-owned, platform, commons
+
+  deals Deal[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@map("providers")
 }
 
 // Buyer table (normalized)
 model Buyer {
-  id                    String   @id @default(uuid())
-  name                  String   @unique
-  orgType               String?  @map("org_type") // lab, cloud, aggregator, startup, research
-  modelsAffected        String?  @map("models_affected") // JSON array
-  
-  deals                 DealBuyer[]
-  
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
-  
+  id             String  @id @default(uuid())
+  name           String  @unique
+  orgType        String? @map("org_type") // lab, cloud, aggregator, startup, research
+  modelsAffected String? @map("models_affected") // JSON array
+
+  deals DealBuyer[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@map("buyers")
 }
 
 // Many-to-many relationship (deals can have multiple buyers)
 model DealBuyer {
-  id                    String   @id @default(uuid())
-  dealId                String   @map("deal_id")
-  buyerId               String   @map("buyer_id")
-  
-  deal                  Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  buyer                 Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  
+  id      String @id @default(uuid())
+  dealId  String @map("deal_id")
+  buyerId String @map("buyer_id")
+
+  deal  Deal  @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  buyer Buyer @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
   @@unique([dealId, buyerId])
   @@map("deal_buyers")
 }
 
 // Pricing normalization table
 model PricingNormalization {
-  id                    String   @id @default(uuid())
-  dealId                String   @map("deal_id")
-  unitType              String   @map("unit_type") // token, record, dataset, corpus, stream, minute, image, track
-  normalizedCostPerUnit Float    @map("normalized_cost_per_unit")
-  normalizationMethod   String   @map("normalization_method") // manual, inferred, approximate
+  id                    String  @id @default(uuid())
+  dealId                String  @map("deal_id")
+  unitType              String  @map("unit_type") // token, record, dataset, corpus, stream, minute, image, track
+  normalizedCostPerUnit Float   @map("normalized_cost_per_unit")
+  normalizationMethod   String  @map("normalization_method") // manual, inferred, approximate
   assumptions           String? // JSON for assumptions used
-  
-  deal                  Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  
-  createdAt             DateTime @default(now()) @map("created_at")
-  
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   @@index([dealId])
   @@map("pricing_normalizations")
 }
 
 // Source tracking for provenance
 model DealSource {
-  id                    String   @id @default(uuid())
-  dealId                String   @map("deal_id")
-  url                   String
-  sourceType            String   @map("source_type") // news, filing, press_release, rss
-  scrapedAt             DateTime? @map("scraped_at")
-  htmlArchive           String?  @map("html_archive") // Path to stored HTML
-  extractedFields       String?  @map("extracted_fields") // JSON of what was extracted
-  
-  createdAt             DateTime @default(now()) @map("created_at")
-  
+  id              String    @id @default(uuid())
+  dealId          String    @map("deal_id")
+  url             String
+  sourceType      String    @map("source_type") // news, filing, press_release, rss
+  scrapedAt       DateTime? @map("scraped_at")
+  htmlArchive     String?   @map("html_archive") // Path to stored HTML
+  extractedFields String?   @map("extracted_fields") // JSON of what was extracted
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   @@index([dealId])
   @@map("deal_sources")
 }
-

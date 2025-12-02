@@ -486,12 +486,27 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                     )}
                   </div>
                 </th>
+                <th className="px-4 py-3 text-center">
+                  <Tooltip content="Rights granted: Training (T), Finetuning (F), Inference (I), Redistribution (R)">
+                    <span className="underline decoration-dotted cursor-help">Rights</span>
+                  </Tooltip>
+                </th>
+                <th className="px-4 py-3">
+                  <Tooltip content="Deal duration and date range">
+                    <span className="underline decoration-dotted cursor-help">Duration</span>
+                  </Tooltip>
+                </th>
+                <th className="px-4 py-3 text-center">
+                  <Tooltip content="Deal stage: announced, rumored, confirmed, or settled">
+                    <span className="underline decoration-dotted cursor-help">Stage</span>
+                  </Tooltip>
+                </th>
               </tr>
             </thead>
             <tbody>
               {sortedDeals.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-text-muted">
+                  <td colSpan={10} className="text-center py-12 text-text-muted">
                     No deals found matching your filters
                   </td>
                 </tr>
@@ -508,7 +523,7 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                         onClick={() => toggleGroup(groupKey)}
                         className="cursor-pointer bg-border-subtle hover:bg-border transition-colors"
                       >
-                        <td colSpan={7}>
+                        <td colSpan={10}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="text-xs text-text-muted">{isExpanded ? '▼' : '▶'}</span>
@@ -592,6 +607,19 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                           <td>
                             <div className="text-sm text-text-muted/80">{formatDate(deal.date)}</div>
                           </td>
+                          <td className="px-4 py-3 text-center">
+                            <RightsIndicators deal={deal} />
+                          </td>
+                          <td>
+                            <div className="text-xs text-text-muted/80">{formatDuration(deal)}</div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {deal.dealStage ? (
+                              <span className="badge badge-secondary text-xs">{formatDealStage(deal.dealStage)}</span>
+                            ) : (
+                              <span className="text-text-muted/40 text-xs">—</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </React.Fragment>
@@ -658,6 +686,19 @@ export default function DealsClient({ initialDeals }: DealsClientProps) {
                     <td>
                       <div className="text-sm text-text-muted/80">{formatDate(deal.date)}</div>
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      <RightsIndicators deal={deal} />
+                    </td>
+                    <td>
+                      <div className="text-xs text-text-muted/80">{formatDuration(deal)}</div>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {deal.dealStage ? (
+                        <span className="badge badge-secondary text-xs">{formatDealStage(deal.dealStage)}</span>
+                      ) : (
+                        <span className="text-text-muted/40 text-xs">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
@@ -678,14 +719,6 @@ function PriceCellWithTooltip({ deal }: { deal: Deal }) {
   const calculated = normalizations.filter(n => n.method === 'calculated')
   const toShow = [...stored, ...calculated].slice(0, 3)
 
-  if (normalizations.length === 0) {
-    return (
-      <div>
-        <div className="font-semibold text-base mb-1">{formatPrice(deal)}</div>
-      </div>
-    )
-  }
-
   return (
     <div className="relative">
       <div
@@ -695,23 +728,30 @@ function PriceCellWithTooltip({ deal }: { deal: Deal }) {
         onClick={() => setShowTooltip(!showTooltip)}
       >
         <div className="font-semibold text-base mb-1">{formatPrice(deal)}</div>
-        <div className="mt-1.5 space-y-1">
-          {toShow.map((norm, idx) => (
-            <div
-              key={idx}
-              className={`text-xs text-right font-mono ${
-                norm.method === 'calculated'
-                  ? 'text-text-muted/60 italic'
-                  : 'text-text-muted/90 font-medium'
-              }`}
-            >
-              {formatNormalizedPrice(norm.price, norm.unitType)}
-              {norm.method === 'calculated' && ' *'}
-            </div>
-          ))}
-        </div>
+        {normalizations.length > 0 && (
+          <div className="mt-1.5 space-y-0.5">
+            {toShow.map((norm, idx) => (
+              <div
+                key={idx}
+                className={`text-xs text-right font-mono ${
+                  norm.method === 'calculated'
+                    ? 'text-text-muted/70 italic'
+                    : 'text-accent font-semibold'
+                }`}
+              >
+                {formatNormalizedPrice(norm.price, norm.unitType)}
+                {norm.method === 'calculated' && ' *'}
+              </div>
+            ))}
+            {normalizations.length > 3 && (
+              <div className="text-xs text-text-muted/60 text-right mt-0.5">
+                +{normalizations.length - 3} more
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      {showTooltip && (
+      {showTooltip && normalizations.length > 0 && (
         <div className="absolute right-0 top-full mt-2 z-50 bg-surface border border-border rounded-none shadow-lg p-3 min-w-[280px]">
           <div className="text-xs font-semibold mb-2 text-text">Normalized Pricing</div>
           <div className="space-y-2">
@@ -719,7 +759,7 @@ function PriceCellWithTooltip({ deal }: { deal: Deal }) {
               <div key={idx} className="flex items-center justify-between text-xs">
                 <span className="text-text-muted">Per {norm.unitType}:</span>
                 <span className={`font-mono ${
-                  norm.method === 'calculated' ? 'text-text-muted/80 italic' : 'font-medium'
+                  norm.method === 'calculated' ? 'text-text-muted/80 italic' : 'font-semibold text-accent'
                 }`}>
                   {formatNormalizedPrice(norm.price, norm.unitType)}
                   {norm.method === 'calculated' && ' *'}
@@ -850,6 +890,83 @@ function getNormalizations(deal: Deal) {
   })
   
   return normalizations
+}
+
+// Helper function to format duration
+function formatDuration(deal: Deal): string {
+  const parts: string[] = []
+  
+  if (deal.durationYears) {
+    parts.push(`${deal.durationYears} ${deal.durationYears === 1 ? 'year' : 'years'}`)
+  }
+  
+  if (deal.startDate || deal.endDate) {
+    const start = deal.startDate ? new Date(deal.startDate).getFullYear() : null
+    const end = deal.endDate ? new Date(deal.endDate).getFullYear() : null
+    if (start && end) {
+      parts.push(`${start}–${end}`)
+    } else if (start) {
+      parts.push(`From ${start}`)
+    } else if (end) {
+      parts.push(`Until ${end}`)
+    }
+  }
+  
+  return parts.length > 0 ? parts.join(' • ') : '—'
+}
+
+// Helper function to format deal stage
+function formatDealStage(stage: string | null | undefined): string {
+  if (!stage) return '—'
+  return stage.charAt(0).toUpperCase() + stage.slice(1)
+}
+
+// Helper function to format confidence score
+function formatConfidence(score: number | null | undefined): string {
+  if (score === null || score === undefined) return '—'
+  return `${(score * 100).toFixed(0)}%`
+}
+
+// Helper function to get confidence badge color
+function getConfidenceColor(score: number | null | undefined): string {
+  if (score === null || score === undefined) return 'text-text-muted/40'
+  if (score >= 0.8) return 'text-green-600'
+  if (score >= 0.6) return 'text-yellow-600'
+  return 'text-orange-600'
+}
+
+// Helper function to render rights indicators
+function RightsIndicators({ deal }: { deal: Deal }) {
+  const rights = [
+    { key: 'training', value: deal.trainingAllowed, label: 'T' },
+    { key: 'finetuning', value: deal.finetuningAllowed, label: 'F' },
+    { key: 'inference', value: deal.inferenceAllowed, label: 'I' },
+    { key: 'redistribution', value: deal.redistributionAllowed, label: 'R' },
+  ]
+  
+  return (
+    <div className="flex items-center justify-center gap-1">
+      {rights.map(({ key, value, label }) => (
+        <Tooltip
+          key={key}
+          content={`${key.charAt(0).toUpperCase() + key.slice(1)}: ${value === true ? 'Allowed' : value === false ? 'Not allowed' : 'Unknown'}`}
+        >
+          <span
+            className={`text-xs font-mono px-1.5 py-0.5 rounded-none ${
+              value === true
+                ? 'bg-green-100 text-green-700'
+                : value === false
+                ? 'bg-red-100 text-red-700'
+                : 'bg-gray-100 text-gray-400'
+            }`}
+            title={`${key}: ${value === true ? 'Yes' : value === false ? 'No' : 'Unknown'}`}
+          >
+            {label}
+          </span>
+        </Tooltip>
+      ))}
+    </div>
+  )
 }
 
 

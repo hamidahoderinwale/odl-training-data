@@ -23,10 +23,6 @@ export default function Sidebar() {
       href: '/linkages',
       label: 'Linkages',
     },
-    {
-      href: '/analytics',
-      label: 'Analytics',
-    },
   ]
 
   return (

@@ -20,13 +20,47 @@ async function getModels() {
       tokensEstMin: true,
       tokensEstMax: true,
       tokensEstMid: true,
-      evidenceStrength: true,
       architectureType: true,
       isMoe: true,
       multimodal: true,
+      estimationMethod: true,
+      estimationConfidence: true,
     },
   })
   return models
+}
+
+function parseJSON<T>(json: string | null | undefined): T | null {
+  if (!json) return null
+  try {
+    return JSON.parse(json) as T
+  } catch {
+    return null
+  }
+}
+
+function getConfidenceColor(confidence: number | null | undefined): string {
+  if (confidence === null || confidence === undefined) return 'text-text-muted/40'
+  if (confidence >= 0.8) return 'text-green-600'
+  if (confidence >= 0.6) return 'text-yellow-600'
+  return 'text-orange-600'
+}
+
+function getConfidenceBadge(confidence: number | null | undefined): string {
+  if (confidence === null || confidence === undefined) return '—'
+  if (confidence >= 0.8) return 'High'
+  if (confidence >= 0.6) return 'Medium'
+  return 'Low'
+}
+
+function formatMethodName(method: string): string {
+  const methodNames: Record<string, string> = {
+    'official_disclosure': 'Official',
+    'chinchilla': 'Chinchilla',
+    'param_ratio': 'Param Ratio',
+    'compute': 'Compute',
+  }
+  return methodNames[method] || method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
 
 function formatTokens(value: number | null | undefined): string {
@@ -109,12 +143,12 @@ export default async function ModelsPage() {
                       <span className="underline decoration-dotted cursor-help">Architecture</span>
                     </Tooltip>
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold">
-                    <Tooltip content="The strength of evidence for the token estimate. High = multiple data sources, Medium = some evidence, Low = limited evidence. Based on how much information we have about the model's training.">
-                      <span className="underline decoration-dotted cursor-help">Evidence</span>
+                  <th className="px-4 py-3 text-left font-semibold">Released</th>
+                  <th className="px-4 py-3 text-center">
+                    <Tooltip content="Confidence score (0-1) indicating reliability of the token estimate. Based on number of methods, data quality, and estimation techniques used.">
+                      <span className="underline decoration-dotted cursor-help">Confidence</span>
                     </Tooltip>
                   </th>
-                  <th className="px-4 py-3 text-left font-semibold">Released</th>
                 </tr>
               </thead>
               <tbody>
@@ -125,7 +159,10 @@ export default async function ModelsPage() {
                             </td>
                           </tr>
                         ) : (
-                  models.map((model) => (
+                  models.map((model) => {
+                    const estimationMethods = parseJSON<string[]>(model.estimationMethod) || []
+                    const confidence = model.estimationConfidence
+                    return (
                     <tr
                       key={model.id}
                       className="cursor-pointer transition-colors border-b border-border-subtle last:border-0 hover:bg-[rgba(232,225,217,0.3)]"
@@ -187,19 +224,42 @@ export default async function ModelsPage() {
                         </div>
                       </td>
                       <td>
-                        {model.evidenceStrength && (
-                          <span className="badge badge-secondary text-xs">
-                            {model.evidenceStrength.replace('S-', '')}
-                          </span>
-                        )}
-                      </td>
-                      <td>
                         <div className="text-sm text-text-muted/80">
                           {model.releaseDate ? formatDate(model.releaseDate instanceof Date ? model.releaseDate.toISOString() : String(model.releaseDate)) : '—'}
                         </div>
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        {confidence !== null && confidence !== undefined ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <span className={`text-xs font-medium ${getConfidenceColor(confidence)}`}>
+                              {getConfidenceBadge(confidence)}
+                            </span>
+                            {estimationMethods.length > 0 && (
+                              <div className="flex flex-wrap gap-0.5 justify-center">
+                                {estimationMethods.slice(0, 2).map((method, idx) => (
+                                  <Tooltip key={idx} content={`Estimation method: ${formatMethodName(method)}`}>
+                                    <span className="text-[10px] px-1 py-0.5 bg-accent/20 text-accent rounded-none">
+                                      {formatMethodName(method).charAt(0)}
+                                    </span>
+                                  </Tooltip>
+                                ))}
+                                {estimationMethods.length > 2 && (
+                                  <Tooltip content={`${estimationMethods.length} methods: ${estimationMethods.map(formatMethodName).join(', ')}`}>
+                                    <span className="text-[10px] px-1 py-0.5 bg-border-subtle text-text-muted rounded-none">
+                                      +{estimationMethods.length - 2}
+                                    </span>
+                                  </Tooltip>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-text-muted/40 text-xs">—</span>
+                        )}
+                      </td>
                     </tr>
-                  ))
+                    )
+                  })
                 )}
               </tbody>
             </table>

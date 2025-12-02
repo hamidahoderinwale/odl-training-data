@@ -106,12 +106,22 @@ async def enrich_all_models(
                     update_data["isMoe"] = enriched["isMoe"]
                 if enriched.get("numExperts"):
                     update_data["numExperts"] = enriched["numExperts"]
+                if enriched.get("activeExperts"):
+                    update_data["activeExperts"] = enriched["activeExperts"]
                 if enriched.get("multimodal") is not None:
                     update_data["multimodal"] = enriched["multimodal"]
                 
                 # Parameters (only if not already set)
                 if not model.params and enriched.get("params"):
                     update_data["params"] = enriched["params"]
+                if enriched.get("paramsActive"):
+                    update_data["paramsActive"] = enriched["paramsActive"]
+                
+                # FLOPs
+                if enriched.get("flopsReported"):
+                    update_data["flopsReported"] = enriched["flopsReported"]
+                if enriched.get("flopsEstimated"):
+                    update_data["flopsEstimated"] = enriched["flopsEstimated"]
                 
                 # Token estimates
                 if enriched.get("tokensEstMin"):
@@ -122,6 +132,16 @@ async def enrich_all_models(
                     update_data["tokensEstMid"] = enriched["tokensEstMid"]
                 if enriched.get("tokensRangeGeneratedAt"):
                     update_data["tokensRangeGeneratedAt"] = enriched["tokensRangeGeneratedAt"]
+                
+                # Estimation metadata
+                if enriched.get("estimationMethod"):
+                    update_data["estimationMethod"] = enriched["estimationMethod"]
+                if enriched.get("estimationConfidence") is not None:
+                    update_data["estimationConfidence"] = enriched["estimationConfidence"]
+                if enriched.get("estimationDate"):
+                    update_data["estimationDate"] = enriched["estimationDate"]
+                if enriched.get("estimationVersion"):
+                    update_data["estimationVersion"] = enriched["estimationVersion"]
                 
                 # Evidence profile
                 if enriched.get("evidenceTypes"):

@@ -37,5 +37,9 @@ export interface Deal {
   exaQuery?: string | null
   exaScore?: number | null
   discoveryDate?: string | null
+  dealStage?: string | null
+  confidenceScore?: number | null
+  startDate?: string | null
+  endDate?: string | null
 }
 

@@ -69,16 +69,16 @@ class DealMonitor:
         if source_filter in ['all', 'rss']:
             print("  📰 Fetching RSS feeds...")
             rss_articles = self.rss_scraper.fetch_all_feeds()
-        all_urls.extend([
-            {
-                "text": f"{a.get('title', '')} {a.get('summary', '')}",
-                "url": a.get("url", ""),
-                "title": a.get("title", ""),
-                "published_date": a.get("published_date"),
-                "source": "rss",
-            }
-            for a in rss_articles
-        ])
+            all_urls.extend([
+                {
+                    "text": f"{a.get('title', '')} {a.get('summary', '')}",
+                    "url": a.get("url", ""),
+                    "title": a.get("title", ""),
+                    "published_date": a.get("published_date"),
+                    "source": "rss",
+                }
+                for a in rss_articles
+            ])
             print(f"    Found {len(rss_articles)} RSS articles")
         else:
             rss_articles = []

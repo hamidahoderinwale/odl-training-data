@@ -134,13 +134,18 @@ class WebModelEnricher:
             except Exception as e:
                 print(f"LLM extraction error: {e}")
         
-        # Build enrichment result
+        # Build comprehensive enrichment result with all extracted fields
         enrichment = {
             "release_date": extracted.get("release_date"),
             "architecture_type": extracted.get("architecture_type"),
             "is_moe": extracted.get("is_moe"),
             "num_experts": extracted.get("num_experts"),
+            "active_experts": extracted.get("active_experts"),
             "multimodal": extracted.get("multimodal"),
+            "params": extracted.get("params"),  # In billions
+            "params_active": extracted.get("params_active"),  # In billions for MoE
+            "flops_reported": extracted.get("flops_reported"),
+            "flops_estimated": extracted.get("flops_estimated"),
             "training_data_sources": extracted.get("training_data_sources", []),
             "training_data_composition": extracted.get("training_data_composition"),
             "training_period_start": extracted.get("training_period_start"),
@@ -160,26 +165,57 @@ class WebModelEnricher:
             "raw_evidence_snippets": [
                 {
                     "text": snippet,
-                    "source_url": unique_results[0].url if unique_results else None,
+                    "source_url": unique_results[i % len(unique_results)].url if unique_results else None,
                 }
-                for snippet in extracted.get("raw_snippets", [])
+                for i, snippet in enumerate(extracted.get("raw_snippets", []))
             ],
         }
         
         return enrichment
     
     def _build_search_queries(self, model_id: str, provider: str) -> List[str]:
-        """Build search queries for model information"""
+        """Build enhanced search queries for comprehensive model information"""
         queries = [
-            f"{model_id} {provider} release date architecture training data",
-            f"{model_id} {provider} system card technical details",
-            f"{model_id} {provider} training dataset sources",
-            f"{model_id} {provider} model card paper",
+            # Core technical information
+            f"{model_id} {provider} release date architecture parameters training data",
+            f"{model_id} {provider} system card technical specifications",
+            f"{model_id} {provider} model card paper technical details",
+            
+            # Training data and composition
+            f"{model_id} {provider} training dataset sources composition",
+            f"{model_id} {provider} training data sources what data was used",
+            f"{model_id} {provider} training corpus dataset composition",
+            
+            # Compute and training details
+            f"{model_id} {provider} FLOPs compute training compute requirements",
+            f"{model_id} {provider} training period when was it trained",
+            f"{model_id} {provider} training timeline start end dates",
+            
+            # Architecture details
+            f"{model_id} {provider} architecture type MoE mixture of experts",
+            f"{model_id} {provider} parameters count size billions trillions",
+            f"{model_id} {provider} multimodal vision image audio capabilities",
+            
+            # Evidence and sources
+            f"{model_id} {provider} official announcement blog post",
+            f"{model_id} {provider} research paper technical report",
+            f"{model_id} {provider} disclosure transparency report",
         ]
         
-        # Add provider-specific queries
-        if provider.lower() in ["openai", "anthropic", "google", "meta"]:
-            queries.append(f"{provider} {model_id} official announcement blog")
+        # Add provider-specific queries for official sources
+        provider_lower = provider.lower()
+        if provider_lower in ["openai", "anthropic", "google", "meta", "mistral", "cohere"]:
+            queries.extend([
+                f"{provider} {model_id} official announcement blog post",
+                f"{provider} {model_id} technical report system card",
+                f"{provider} {model_id} research paper publication",
+            ])
+        
+        # Add queries for evidence types
+        queries.extend([
+            f"{model_id} {provider} evidence sources disclosure",
+            f"{model_id} {provider} what information is publicly available",
+        ])
         
         return queries
     
@@ -201,13 +237,18 @@ class WebModelEnricher:
         return "\n\n".join(combined)
     
     def _empty_enrichment(self) -> Dict[str, Any]:
-        """Return empty enrichment result"""
+        """Return empty enrichment result with all fields"""
         return {
             "release_date": None,
             "architecture_type": None,
             "is_moe": None,
             "num_experts": None,
+            "active_experts": None,
             "multimodal": None,
+            "params": None,
+            "params_active": None,
+            "flops_reported": None,
+            "flops_estimated": None,
             "training_data_sources": [],
             "training_data_composition": None,
             "training_period_start": None,
