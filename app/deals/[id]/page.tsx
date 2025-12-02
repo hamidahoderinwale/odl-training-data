@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import DealFeed from '../../components/deals/DealFeed'
-import { getSourceUrl } from '@/lib/utils'
+import { getSourceUrl } from '@/lib/utils/utils'
 
 async function getDeal(id: string) {
   const deal = await prisma.deal.findUnique({
@@ -54,7 +54,7 @@ export default async function DealDetailPage({
     <main className="min-h-screen bg-background">
       <div className="container-content section-padding">
         <Link
-          href="/deals"
+          href="/"
           className="text-accent hover:text-accent-hover mb-6 inline-block"
         >
           ← Back to Deals

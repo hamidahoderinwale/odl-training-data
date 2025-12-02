@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import React from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import Link from 'next/link'
-import { formatDate } from '@/lib/utils'
-import Tooltip from '@/app/components/Tooltip'
+import { formatDate } from '@/lib/utils/utils'
+import Tooltip from '@/app/components/ui/Tooltip'
+import NetworkGraph from '@/app/components/linkages/NetworkGraph'
+import AggregatedView from '@/app/components/linkages/AggregatedView'
 
 interface Linkage {
   id: string
@@ -57,6 +58,7 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
   })
   const [groupBy, setGroupBy] = useState<string>('')
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [viewMode, setViewMode] = useState<'table' | 'graph' | 'aggregated'>('aggregated')
 
   // Filter linkages
   let filteredLinkages = linkages.filter(linkage => {
@@ -84,30 +86,69 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
     return true
   })
 
-  // Sort linkages
+  // Sort linkages with improved logic
   const sortedLinkages = [...filteredLinkages].sort((a, b) => {
     const { column, direction } = sortBy
     let comparison = 0
 
     switch (column) {
       case 'deal':
-        comparison = a.deal.provider.localeCompare(b.deal.provider)
+        // A-Z / Z-A text sorting by provider
+        const providerA = (a.deal.provider || '').toLowerCase().trim()
+        const providerB = (b.deal.provider || '').toLowerCase().trim()
+        if (providerA !== providerB) {
+          comparison = providerA.localeCompare(providerB, undefined, { numeric: true, sensitivity: 'base' })
+        } else {
+          // Same provider, sort by buyer
+          const buyerA = (a.deal.buyer || '').toLowerCase().trim()
+          const buyerB = (b.deal.buyer || '').toLowerCase().trim()
+          comparison = buyerA.localeCompare(buyerB, undefined, { numeric: true, sensitivity: 'base' })
+        }
         break
       case 'model':
-        comparison = a.model.modelId.localeCompare(b.model.modelId)
+        // A-Z / Z-A text sorting with numeric awareness
+        const modelIdA = (a.model.modelId || '').toLowerCase().trim()
+        const modelIdB = (b.model.modelId || '').toLowerCase().trim()
+        if (modelIdA !== modelIdB) {
+          comparison = modelIdA.localeCompare(modelIdB, undefined, { numeric: true, sensitivity: 'base' })
+        } else {
+          // Same model, sort by provider
+          const modelProviderA = (a.model.provider || '').toLowerCase().trim()
+          const modelProviderB = (b.model.provider || '').toLowerCase().trim()
+          comparison = modelProviderA.localeCompare(modelProviderB, undefined, { numeric: true, sensitivity: 'base' })
+        }
         break
       case 'linkageType':
-        comparison = a.linkageType.localeCompare(b.linkageType)
+        // A-Z / Z-A text sorting
+        const typeA = (a.linkageType || '').toLowerCase().trim()
+        const typeB = (b.linkageType || '').toLowerCase().trim()
+        comparison = typeA.localeCompare(typeB, undefined, { numeric: true, sensitivity: 'base' })
         break
       case 'linkageStrength':
+        // Ordinal sorting: high > medium > low
         const strengthOrder = { 'high': 3, 'medium': 2, 'low': 1 }
-        comparison = (strengthOrder[a.linkageStrength as keyof typeof strengthOrder] || 0) - 
-                     (strengthOrder[b.linkageStrength as keyof typeof strengthOrder] || 0)
+        const strengthA = strengthOrder[a.linkageStrength as keyof typeof strengthOrder] || 0
+        const strengthB = strengthOrder[b.linkageStrength as keyof typeof strengthOrder] || 0
+        comparison = strengthA - strengthB
         break
       case 'date':
+        // Date sorting: extract year for comparison, nulls go to end
         const dateA = a.deal.date || ''
         const dateB = b.deal.date || ''
-        comparison = dateA.localeCompare(dateB)
+        if (!dateA && !dateB) comparison = 0
+        else if (!dateA) comparison = 1
+        else if (!dateB) comparison = -1
+        else {
+          // Extract year for better sorting
+          const yearA = dateA.match(/\b(20\d{2})\b/)?.[1] || '0000'
+          const yearB = dateB.match(/\b(20\d{2})\b/)?.[1] || '0000'
+          if (yearA !== yearB) {
+            comparison = yearA.localeCompare(yearB)
+          } else {
+            // Same year, compare full date string
+            comparison = dateA.localeCompare(dateB)
+          }
+        }
         break
       default:
         comparison = 0
@@ -208,7 +249,14 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
 
   const getSortIndicator = (column: string) => {
     if (sortBy.column !== column) return null
-    return sortBy.direction === 'asc' ? '↑' : '↓'
+    // For ordinal columns, show different indicators
+    if (column === 'linkageStrength') {
+      return sortBy.direction === 'asc' ? '↑ Low→High' : '↓ High→Low'
+    }
+    if (column === 'date') {
+      return sortBy.direction === 'asc' ? '↑ Old→New' : '↓ New→Old'
+    }
+    return sortBy.direction === 'asc' ? '↑ A→Z' : '↓ Z→A'
   }
 
   return (
@@ -315,56 +363,109 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
         </div>
       </div>
 
-      {/* Grouping and Results Count */}
+      {/* View Mode Toggle and Grouping */}
       <div className="mb-3 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-text-muted uppercase tracking-wide">Group by:</label>
-            <select
-              value={groupBy}
-              onChange={(e) => {
-                setGroupBy(e.target.value)
-                setExpandedGroups(new Set())
-              }}
-              className="input text-sm py-1.5"
-            >
-              <option value="">None</option>
-              <option value="linkageType">Connection Type</option>
-              <option value="linkageStrength">Confidence</option>
-              <option value="provider">Data Provider</option>
-              <option value="buyer">Buyer</option>
-              <option value="modelProvider">Model Provider</option>
-              <option value="modality">Modality</option>
-            </select>
+            <label className="text-xs font-medium text-text-muted uppercase tracking-wide">View:</label>
+            <div className="flex gap-1 border border-border-subtle rounded-none">
+              <button
+                onClick={() => setViewMode('aggregated')}
+                className={`px-3 py-1.5 text-xs transition-colors ${
+                  viewMode === 'aggregated'
+                    ? 'bg-accent text-white'
+                    : 'bg-surface text-text-muted hover:bg-border-subtle'
+                }`}
+              >
+                Aggregated
+              </button>
+              <button
+                onClick={() => setViewMode('graph')}
+                className={`px-3 py-1.5 text-xs transition-colors ${
+                  viewMode === 'graph'
+                    ? 'bg-accent text-white'
+                    : 'bg-surface text-text-muted hover:bg-border-subtle'
+                }`}
+              >
+                Network Graph
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-1.5 text-xs transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-accent text-white'
+                    : 'bg-surface text-text-muted hover:bg-border-subtle'
+                }`}
+              >
+                Table
+              </button>
+            </div>
           </div>
-          {groupBy && (
-            <button
-              onClick={() => {
-                setExpandedGroups(new Set(groupKeys))
-              }}
-              className="text-xs text-accent hover:text-accent-hover"
-            >
-              Expand All
-            </button>
-          )}
-          {groupBy && (
-            <button
-              onClick={() => {
-                setExpandedGroups(new Set())
-              }}
-              className="text-xs text-accent hover:text-accent-hover"
-            >
-              Collapse All
-            </button>
+          {viewMode === 'table' && (
+            <>
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-medium text-text-muted uppercase tracking-wide">Group by:</label>
+                <select
+                  value={groupBy}
+                  onChange={(e) => {
+                    setGroupBy(e.target.value)
+                    setExpandedGroups(new Set())
+                  }}
+                  className="input text-sm py-1.5"
+                >
+                  <option value="">None</option>
+                  <option value="linkageType">Connection Type</option>
+                  <option value="linkageStrength">Confidence</option>
+                  <option value="provider">Data Provider</option>
+                  <option value="buyer">Buyer</option>
+                  <option value="modelProvider">Model Provider</option>
+                  <option value="modality">Modality</option>
+                </select>
+              </div>
+              {groupBy && (
+                <button
+                  onClick={() => {
+                    setExpandedGroups(new Set(groupKeys))
+                  }}
+                  className="text-xs text-accent hover:text-accent-hover"
+                >
+                  Expand All
+                </button>
+              )}
+              {groupBy && (
+                <button
+                  onClick={() => {
+                    setExpandedGroups(new Set())
+                  }}
+                  className="text-xs text-accent hover:text-accent-hover"
+                >
+                  Collapse All
+                </button>
+              )}
+            </>
           )}
         </div>
         <div className="text-sm text-text-muted">
-          Showing <span className="font-medium text-text">{sortedLinkages.length}</span> of <span className="font-medium text-text">{linkages.length}</span> linkages
+          {viewMode === 'aggregated' ? (
+            <span>
+              <span className="font-medium text-text">{new Set(filteredLinkages.map(l => `${l.deal.id}:${l.model.provider}`)).size}</span> unique connections
+            </span>
+          ) : (
+            <span>
+              Showing <span className="font-medium text-text">{sortedLinkages.length}</span> of <span className="font-medium text-text">{linkages.length}</span> linkages
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Results */}
-      <div className="card overflow-hidden p-0">
+      {/* Results - Different views based on mode */}
+      {viewMode === 'aggregated' ? (
+        <AggregatedView linkages={filteredLinkages} />
+      ) : viewMode === 'graph' ? (
+        <NetworkGraph linkages={filteredLinkages} />
+      ) : (
+        /* Table view */
+        <div className="card overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="table text-sm">
             <thead>
@@ -429,6 +530,19 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
                   </div>
                   <div className="text-xs font-normal text-text-muted mt-0.5">How certain we are</div>
                 </th>
+                <th 
+                  className="cursor-pointer hover:bg-border select-none"
+                  onClick={() => handleSort('date')}
+                  title="Click to sort by date"
+                >
+                  <div className="flex items-center gap-2">
+                    Date
+                    {getSortIndicator('date') && (
+                      <span className="text-text-muted text-xs">{getSortIndicator('date')}</span>
+                    )}
+                  </div>
+                  <div className="text-xs font-normal text-text-muted mt-0.5">Deal date</div>
+                </th>
                 <th className="text-left font-semibold">
                   <Tooltip content="An interpretation of what this linkage means - how the deal's data may have impacted the model's training.">
                     <span className="underline decoration-dotted cursor-help">What This Means</span>
@@ -440,7 +554,7 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
             <tbody>
               {sortedLinkages.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-text-muted">
+                  <td colSpan={6} className="text-center py-12 text-text-muted">
                     No linkages found matching your filters
                   </td>
                 </tr>
@@ -451,12 +565,12 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
                   const isExpanded = expandedGroups.has(groupKey)
                   
                   return (
-                    <React.Fragment key={groupKey}>
+                    <Fragment key={groupKey}>
                       <tr
                         onClick={() => toggleGroup(groupKey)}
                         className="cursor-pointer bg-border-subtle hover:bg-border transition-colors"
                       >
-                        <td colSpan={5}>
+                        <td colSpan={6}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="text-xs text-text-muted">{isExpanded ? '▼' : '▶'}</span>
@@ -531,13 +645,18 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
                             </span>
                           </td>
                           <td>
+                            <div className="text-sm">
+                              {linkage.deal.date ? formatDate(linkage.deal.date) : '—'}
+                            </div>
+                          </td>
+                          <td>
                             <div className="text-sm text-text leading-relaxed">
                               {linkage.impactInference || '—'}
                             </div>
                           </td>
                         </tr>
                       ))}
-                    </React.Fragment>
+                    </Fragment>
                   )
                 })
               ) : (
@@ -555,7 +674,7 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
                         {linkage.deal.provider} → {linkage.deal.buyer}
                       </Link>
                       <div className="text-xs text-text-muted mt-0.5">
-                        {linkage.deal.modality} • {linkage.deal.date ? formatDate(linkage.deal.date) : '—'}
+                        {linkage.deal.modality}
                       </div>
                     </td>
                     <td>
@@ -605,6 +724,11 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
                       </span>
                     </td>
                     <td>
+                      <div className="text-sm">
+                        {linkage.deal.date ? formatDate(linkage.deal.date) : '—'}
+                      </div>
+                    </td>
+                    <td>
                       <div className="text-sm text-text leading-relaxed">
                         {linkage.impactInference || '—'}
                       </div>
@@ -616,7 +740,9 @@ export default function LinkagesClient({ initialLinkages }: LinkagesClientProps)
           </table>
         </div>
       </div>
+      )}
     </>
   )
 }
+
 

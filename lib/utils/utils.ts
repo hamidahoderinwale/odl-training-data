@@ -93,64 +93,119 @@ export function getSourceUrl(sourceName: string | null): string | null {
 /**
  * Format a date string to a human-readable format
  * Handles abbreviated year ranges from PDF (e.g., "2023-24", "2020-24")
+ * 
+ * More systematic approach:
+ * 1. Handle special formats first (H1, H2)
+ * 2. Handle year ranges (full and abbreviated)
+ * 3. Handle ISO date formats (YYYY-MM-DD, YYYY-MM)
+ * 4. Handle single years
+ * 5. Fallback to parsing as Date object
  */
 export function formatDate(dateString: string | null): string {
   if (!dateString) return '—'
   
-  // Handle formats like "2025-09-05", "2025-08", "2025 H1", "2023-2024", "2023-24", "2020-24"
-  if (dateString.includes('H1') || dateString.includes('H2')) {
-    return dateString
+  const trimmed = dateString.trim()
+  
+  // 1. Handle special formats like "2025 H1", "2025 H2"
+  if (trimmed.includes('H1') || trimmed.includes('H2')) {
+    return trimmed
   }
   
-  // Handle abbreviated year ranges (e.g., "2023-24", "2020-24" from PDF Table 4)
-  // Keep them as-is to match the source document
+  // 2. Handle abbreviated year ranges (e.g., "2023-24", "2020-24")
+  // Pattern: 4-digit year, dash/en-dash, 2-digit year (not followed by more digits)
   const abbreviatedRangePattern = /^(\d{4})[–-](\d{2})(?:\s|$|[^0-9])/
-  if (abbreviatedRangePattern.test(dateString)) {
-    return dateString // Return as-is to match PDF format
-  }
-  
-  if (dateString.includes('–') || dateString.includes('-')) {
-    const parts = dateString.split(/[–-]/)
-    if (parts.length === 2) {
-      const start = parts[0].trim()
-      const end = parts[1].trim()
-      // If both parts are 4-digit years, check if we should abbreviate
-      if (/^\d{4}$/.test(start) && /^\d{4}$/.test(end)) {
-        const startYear = parseInt(start)
-        const endYear = parseInt(end)
-        // Abbreviate short ranges (e.g., "2023-2024" → "2023-24") to match PDF style
-        if (endYear - startYear <= 4 && endYear >= 2020) {
-          const endYearShort = endYear.toString().slice(-2)
-          return `${startYear}–${endYearShort}`
-        }
-        return `${start}–${end}`
-      }
-      // Otherwise, format each part separately
-      const startFormatted = formatDate(start)
-      const endFormatted = formatDate(end)
-      return `${startFormatted}–${endFormatted}`
+  const abbreviatedMatch = trimmed.match(abbreviatedRangePattern)
+  if (abbreviatedMatch) {
+    const startYear = parseInt(abbreviatedMatch[1])
+    const endYearShort = parseInt(abbreviatedMatch[2])
+    // Convert 2-digit year to 4-digit (assume 2000s for years 00-99)
+    const endYear = endYearShort < 50 ? 2000 + endYearShort : 1900 + endYearShort
+    if (startYear >= 2000 && endYear >= 2000 && endYear >= startYear) {
+      return `${startYear}–${endYearShort}`
     }
   }
   
-  // Try to parse as date
-  const date = new Date(dateString)
+  // 3. Handle full year ranges (e.g., "2023-2024", "2020-2023")
+  // Must be two 4-digit years separated by dash/en-dash, not followed by more digits
+  const yearRangePattern = /^(\d{4})[–-](\d{4})(?:\s|$|[^0-9])/
+  const yearRangeMatch = trimmed.match(yearRangePattern)
+  if (yearRangeMatch) {
+    const startYear = parseInt(yearRangeMatch[1])
+    const endYear = parseInt(yearRangeMatch[2])
+    if (startYear >= 2000 && endYear >= 2000 && endYear >= startYear) {
+      // Abbreviate short ranges (e.g., "2023-2024" → "2023-24")
+      if (endYear - startYear <= 4 && endYear >= 2020) {
+        const endYearShort = endYear.toString().slice(-2)
+        return `${startYear}–${endYearShort}`
+      }
+      return `${startYear}–${endYear}`
+    }
+  }
+  
+  // 4. Handle ISO date formats: YYYY-MM-DD
+  const isoDatePattern = /^(\d{4})-(\d{2})-(\d{2})$/
+  const isoDateMatch = trimmed.match(isoDatePattern)
+  if (isoDateMatch) {
+    const year = parseInt(isoDateMatch[1])
+    const month = parseInt(isoDateMatch[2])
+    const day = parseInt(isoDateMatch[3])
+    if (year >= 2000 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      const date = new Date(year, month - 1, day)
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' })
+      return `${monthName} ${year}`
+    }
+  }
+  
+  // 5. Handle year-month format: YYYY-MM (must be exactly this format, not part of a range)
+  const yearMonthPattern = /^(\d{4})-(\d{2})$/
+  const yearMonthMatch = trimmed.match(yearMonthPattern)
+  if (yearMonthMatch) {
+    const year = parseInt(yearMonthMatch[1])
+    const month = parseInt(yearMonthMatch[2])
+    if (year >= 2000 && month >= 1 && month <= 12) {
+      const date = new Date(year, month - 1, 1)
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' })
+      return `${monthName} ${year}`
+    }
+  }
+  
+  // 6. Handle single year: YYYY
+  const singleYearPattern = /^(\d{4})$/
+  const singleYearMatch = trimmed.match(singleYearPattern)
+  if (singleYearMatch) {
+    const year = parseInt(singleYearMatch[1])
+    if (year >= 2000 && year <= 2099) {
+      return year.toString()
+    }
+  }
+  
+  // 7. Handle date ranges with formatted dates (e.g., "Dec 2024–Aug 2025")
+  // Split on dash/en-dash and format each part
+  if (trimmed.includes('–') || trimmed.includes('-')) {
+    const parts = trimmed.split(/[–-]/).map(p => p.trim())
+    if (parts.length === 2) {
+      const startFormatted = formatDate(parts[0])
+      const endFormatted = formatDate(parts[1])
+      // Only combine if both parts formatted successfully
+      if (startFormatted !== parts[0] || endFormatted !== parts[1]) {
+        return `${startFormatted}–${endFormatted}`
+      }
+    }
+  }
+  
+  // 8. Fallback: Try to parse as Date object (for other formats)
+  const date = new Date(trimmed)
   if (!isNaN(date.getTime())) {
-    const month = date.toLocaleDateString('en-US', { month: 'short' })
     const year = date.getFullYear()
-    return `${month} ${year}`
+    // Only use this if it's a reasonable year (2000-2099)
+    if (year >= 2000 && year <= 2099) {
+      const month = date.toLocaleDateString('en-US', { month: 'short' })
+      return `${month} ${year}`
+    }
   }
   
-  // If it's just a year or year-month, return as is
-  if (/^\d{4}$/.test(dateString)) {
-    return dateString
-  }
-  if (/^\d{4}-\d{2}$/.test(dateString)) {
-    const [year, month] = dateString.split('-')
-    const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', { month: 'short' })
-    return `${monthName} ${year}`
-  }
-  
-  return dateString
+  // 9. Final fallback: return as-is
+  return trimmed
 }
 
 /**

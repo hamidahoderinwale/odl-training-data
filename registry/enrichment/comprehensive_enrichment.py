@@ -16,6 +16,8 @@ sys.path.insert(0, str(project_root))
 
 from registry.collectors.epoch_collector import EpochCollector
 from registry.collectors.hf_collector import HuggingFaceCollector
+from registry.collectors.arxiv_collector import ArxivCollector
+from registry.collectors.company_website_collector import CompanyWebsiteCollector
 from registry.enrichment.web_enrichment import WebModelEnricher
 from registry.evidence_profile import EvidenceProfileManager
 from registry.inference.reconciliation import TokenInferenceReconciler
@@ -44,6 +46,8 @@ class ComprehensiveModelEnricher:
         """
         self.epoch_collector = EpochCollector()
         self.hf_collector = HuggingFaceCollector()
+        self.arxiv_collector = ArxivCollector()
+        self.company_collector = CompanyWebsiteCollector(exa_api_key=exa_api_key)
         self.inference_reconciler = TokenInferenceReconciler()
         self.evidence_manager = EvidenceProfileManager()
         
@@ -113,7 +117,67 @@ class ComprehensiveModelEnricher:
         except Exception as e:
             print(f"HF collection error: {e}")
         
-        # Source 3: Web search (if enabled)
+        # Source 3: arXiv technical reports (for release dates)
+        arxiv_data = None
+        try:
+            print(f"  Searching arXiv for {model_id}...")
+            arxiv_papers = self.arxiv_collector.search_arxiv(
+                model_id=model_id,
+                provider=provider,
+                max_results=5
+            )
+            if arxiv_papers:
+                arxiv_release_date = self.arxiv_collector.extract_release_date(arxiv_papers)
+                if arxiv_release_date:
+                    arxiv_data = {
+                        "release_date": arxiv_release_date.isoformat(),
+                        "arxiv_papers": [
+                            {
+                                "title": p.get("title"),
+                                "url": p.get("url"),
+                                "published_date": p.get("published_date").isoformat() if p.get("published_date") else None,
+                            }
+                            for p in arxiv_papers[:3]
+                        ],
+                        "source": "arxiv"
+                    }
+                    print(f"    Found arXiv paper with release date: {arxiv_release_date.date()}")
+        except Exception as e:
+            print(f"  arXiv collection error: {e}")
+        
+        # Source 4: Company website (for release dates)
+        company_data = None
+        try:
+            print(f"  Searching {provider} website for {model_id}...")
+            company_results = self.company_collector.search_company_site(
+                model_id=model_id,
+                provider=provider,
+                max_results=5
+            )
+            if company_results:
+                company_release_date = self.company_collector.extract_release_date(
+                    company_results,
+                    model_id,
+                    provider
+                )
+                if company_release_date:
+                    company_data = {
+                        "release_date": company_release_date.isoformat(),
+                        "company_sources": [
+                            {
+                                "title": r.title if hasattr(r, 'title') else None,
+                                "url": r.url if hasattr(r, 'url') else None,
+                                "published_date": r.published_date if hasattr(r, 'published_date') else None,
+                            }
+                            for r in company_results[:3]
+                        ],
+                        "source": "company_website"
+                    }
+                    print(f"    Found company website release date: {company_release_date.date()}")
+        except Exception as e:
+            print(f"  Company website collection error: {e}")
+        
+        # Source 5: Web search (if enabled)
         web_data = None
         if self.web_enricher:
             try:
@@ -130,6 +194,8 @@ class ComprehensiveModelEnricher:
             enriched,
             epoch_data,
             hf_data,
+            arxiv_data,
+            company_data,
             web_data
         )
         
@@ -160,6 +226,8 @@ class ComprehensiveModelEnricher:
         evidence_profile = self._generate_evidence_profile(
             epoch_data,
             hf_data,
+            arxiv_data,
+            company_data,
             web_data,
             merged
         )
@@ -184,6 +252,24 @@ class ComprehensiveModelEnricher:
                 "url": hf_data.get("url"),
                 "retrieved_at": datetime.now().isoformat(),
             })
+        if arxiv_data and arxiv_data.get("arxiv_papers"):
+            for paper in arxiv_data.get("arxiv_papers", [])[:2]:
+                sources.append({
+                    "type": "arxiv",
+                    "url": paper.get("url"),
+                    "title": paper.get("title"),
+                    "published_date": paper.get("published_date"),
+                    "retrieved_at": datetime.now().isoformat(),
+                })
+        if company_data and company_data.get("company_sources"):
+            for source in company_data.get("company_sources", [])[:2]:
+                sources.append({
+                    "type": "company_website",
+                    "url": source.get("url"),
+                    "title": source.get("title"),
+                    "published_date": source.get("published_date"),
+                    "retrieved_at": datetime.now().isoformat(),
+                })
         if web_data:
             sources.extend(web_data.get("sources", []))
         
@@ -232,12 +318,27 @@ class ComprehensiveModelEnricher:
         base: Dict[str, Any],
         epoch_data: Optional[Dict[str, Any]],
         hf_data: Optional[Dict[str, Any]],
+        arxiv_data: Optional[Dict[str, Any]],
+        company_data: Optional[Dict[str, Any]],
         web_data: Optional[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Merge data from all sources with priority"""
         merged = base.copy()
         
-        # Priority: Direct disclosures > Third-party analysis > Inferred
+        # Priority for release dates: arXiv > Company Website > Epoch > HuggingFace > Web search
+        # (arXiv and company sites are most authoritative for release dates)
+        
+        # From arXiv (highest priority for release dates - technical reports are authoritative)
+        if arxiv_data:
+            if not merged.get("releaseDate") and arxiv_data.get("release_date"):
+                merged["releaseDate"] = self._parse_date(arxiv_data.get("release_date"))
+                merged["releaseDateSource"] = "arxiv"
+        
+        # From Company Website (high priority for release dates - official announcements)
+        if company_data:
+            if not merged.get("releaseDate") and company_data.get("release_date"):
+                merged["releaseDate"] = self._parse_date(company_data.get("release_date"))
+                merged["releaseDateSource"] = "company_website"
         
         # From Epoch (high priority - curated dataset)
         if epoch_data:
@@ -245,6 +346,8 @@ class ComprehensiveModelEnricher:
                 merged["params"] = epoch_data.get("parameter_count") / 1e9
             if not merged.get("releaseDate") and epoch_data.get("release_date"):
                 merged["releaseDate"] = self._parse_date(epoch_data.get("release_date"))
+                if not merged.get("releaseDateSource"):
+                    merged["releaseDateSource"] = "epoch"
             if not merged.get("architectureType") and epoch_data.get("architecture_type"):
                 merged["architectureType"] = epoch_data.get("architecture_type")
             if epoch_data.get("architecture_type", "").lower() == "moe":
@@ -261,11 +364,15 @@ class ComprehensiveModelEnricher:
                 merged["params"] = hf_data.get("params") / 1e9
             if not merged.get("releaseDate") and hf_data.get("created_at"):
                 merged["releaseDate"] = self._parse_date(hf_data.get("created_at"))
+                if not merged.get("releaseDateSource"):
+                    merged["releaseDateSource"] = "huggingface"
         
         # From Web search (lower priority but comprehensive)
         if web_data:
             if not merged.get("releaseDate") and web_data.get("release_date"):
                 merged["releaseDate"] = self._parse_date(web_data.get("release_date"))
+                if not merged.get("releaseDateSource"):
+                    merged["releaseDateSource"] = "web_search"
             if not merged.get("architectureType") and web_data.get("architecture_type"):
                 merged["architectureType"] = web_data.get("architecture_type")
             if web_data.get("is_moe") is not None:
@@ -285,12 +392,28 @@ class ComprehensiveModelEnricher:
         self,
         epoch_data: Optional[Dict[str, Any]],
         hf_data: Optional[Dict[str, Any]],
+        arxiv_data: Optional[Dict[str, Any]],
+        company_data: Optional[Dict[str, Any]],
         web_data: Optional[Dict[str, Any]],
         merged: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Generate evidence profile from all sources"""
         evidence_types = set()
         sources_count = 0
+        
+        # arXiv papers - E1 (direct disclosure via technical reports)
+        if arxiv_data:
+            sources_count += 1
+            evidence_types.add("E1")  # Technical reports are direct disclosures
+            if arxiv_data.get("release_date"):
+                evidence_types.add("E5")  # Temporal evidence
+        
+        # Company website - E1 (direct disclosure from official source)
+        if company_data:
+            sources_count += 1
+            evidence_types.add("E1")  # Official company announcements
+            if company_data.get("release_date"):
+                evidence_types.add("E5")  # Temporal evidence
         
         # Epoch data - usually E4 (third-party analysis)
         if epoch_data:
@@ -325,10 +448,11 @@ class ComprehensiveModelEnricher:
         if merged.get("params") or merged.get("architectureType"):
             evidence_types.add("E3")
         
-        # Calculate strength
+        # Calculate strength (boost if we have arXiv or company website)
+        has_authoritative_source = arxiv_data is not None or company_data is not None
         if sources_count >= 3 and "E1" in evidence_types:
             strength = "S-High"
-        elif sources_count >= 2 or "E1" in evidence_types:
+        elif (sources_count >= 2 or "E1" in evidence_types) or has_authoritative_source:
             strength = "S-Medium"
         else:
             strength = "S-Low"
@@ -337,6 +461,9 @@ class ComprehensiveModelEnricher:
         uncertainty = []
         if not merged.get("releaseDate"):
             uncertainty.append("U5")
+        elif merged.get("releaseDateSource") in ["arxiv", "company_website"]:
+            # High confidence if from authoritative sources - no uncertainty
+            pass
         if not merged.get("architectureType"):
             uncertainty.append("U3")
         if not merged.get("trainingPeriodStart"):

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createDealModelLinkages } from '@/lib/linkage'
+import { createDealModelLinkages } from '@/lib/api/linkage'
 
 export const dynamic = 'force-dynamic'
 

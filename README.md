@@ -207,14 +207,42 @@ npm run pipeline:monitor
 
 ```
 ├── app/                    # Next.js App Router
-│   ├── api/               # API routes (deals, models, linkages)
-│   ├── deals/             # Deals pages and components
+│   ├── api/               # API routes (deals, models, linkages, currency)
+│   │   ├── deals/         # Deal-related endpoints
+│   │   ├── models/        # Model-related endpoints
+│   │   ├── linkages/      # Linkage endpoints
+│   │   └── currency/      # Currency conversion
+│   ├── components/        # React components
+│   │   ├── ui/            # Shared UI components (Sidebar, Tooltip, ProgressBar)
+│   │   ├── deals/         # Deal-specific components
+│   │   ├── models/        # Model-specific components
+│   │   └── linkages/      # Linkage-specific components
+│   ├── deals/             # Deals pages and client components
 │   ├── timeline/          # Timeline view of deals
 │   ├── models/            # Model Registry pages
 │   ├── linkages/          # Deal-model linkages
-│   └── normalization/     # Pricing normalization tool
+│   ├── normalization/     # Pricing normalization tool
+│   └── help/              # Help/documentation page
+├── lib/                   # Shared utilities and types
+│   ├── api/               # API-related utilities
+│   │   ├── deal-enrichment.ts
+│   │   ├── model-enrichment.ts
+│   │   ├── linkage.ts
+│   │   └── priority-models.ts
+│   ├── utils/             # General utilities
+│   │   ├── utils.ts       # Formatting and data manipulation
+│   │   ├── currency.ts    # Currency conversion
+│   │   └── date-validation.ts
+│   ├── types/             # TypeScript type definitions
+│   │   └── deal.ts
+│   └── prisma.ts          # Prisma client instance
 ├── prisma/                # Database schema and migrations
+│   ├── schema.prisma      # Database schema
+│   └── seed.ts            # Database seeding
 ├── ingestion/             # Python scraping pipeline
+│   ├── discovery/         # Discovery engines
+│   │   ├── exa_client.py
+│   │   └── exa_deal_discovery.py
 │   ├── pipeline/          # Extraction pipeline stages
 │   │   ├── preprocessor.py      # Stage A: Text preprocessing
 │   │   ├── regex_extractor.py   # Stage B: Regex extraction
@@ -229,16 +257,22 @@ npm run pipeline:monitor
 │   │   ├── rss_scraper.py
 │   │   ├── news_api_scraper.py
 │   │   ├── sec_scraper.py
-│   │   └── perplexity_feed_scraper.py  # AI-powered feed (like briefing.commonknowled.ge)
-│   ├── exa_deal_discovery.py
-│   ├── deal_parser.py
+│   │   └── perplexity_feed_scraper.py
 │   ├── monitor.py         # Monitoring pipeline
-│   └── main.py
+│   ├── source_registry.py # Source configuration
+│   └── validator.py       # Data validation
+├── registry/              # Model registry and enrichment
+│   ├── collectors/        # Data collectors
+│   ├── enrichment/        # Model enrichment
+│   ├── inference/         # Token inference
+│   └── storage/           # Storage utilities
 ├── mcp-servers/           # MCP servers (optional)
 │   ├── database/          # Database operations
 │   ├── deal-discovery/    # Multi-source discovery
 │   └── entity-resolution/ # Entity normalization
-└── lib/                   # Utilities
+└── scripts/               # Utility scripts
+    ├── discover-deals.sh
+    └── migrate-dates.ts
 ```
 
 ## Database Schema

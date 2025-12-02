@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { enrichDeal } from '@/lib/deal-enrichment'
+import { enrichDeal } from '@/lib/api/deal-enrichment'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes

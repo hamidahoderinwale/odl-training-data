@@ -3,10 +3,10 @@ import Link from 'next/link'
 import DealsClient from './deals/DealsClient'
 import DiscoveryButton from './components/deals/DiscoveryButton'
 import NormalizationInfoBar from './components/deals/NormalizationInfoBar'
-import ProgressBar from './components/ProgressBar'
+import ProgressBar from './components/ui/ProgressBar'
 import AutoEnrich from './components/deals/AutoEnrich'
-import Tooltip from './components/Tooltip'
-import { enrichDeal } from '@/lib/deal-enrichment'
+import Tooltip from './components/ui/Tooltip'
+import { enrichDeal } from '@/lib/api/deal-enrichment'
 
 async function getDeals() {
   const deals = await prisma.deal.findMany({

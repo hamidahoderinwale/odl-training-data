@@ -74,9 +74,36 @@ class ExtractionPipeline:
             }
         ]
         
-        # Validate required fields
-        if not canonical.get("provider") or not canonical.get("buyer"):
+        # Validate required fields - be more lenient
+        # If we have at least one of provider/buyer, try to infer the other from context
+        provider = canonical.get("provider") or ""
+        buyer = canonical.get("buyer") or ""
+        
+        # If we have classification metadata, try to extract from there
+        if metadata and metadata.get("classification"):
+            classification = metadata.get("classification", {})
+            # Try to infer from AI companies or data providers found
+            if not provider and classification.get("data_providers_found"):
+                # Use first data provider as provider
+                provider_match = classification.get("data_providers_found", [])
+                if provider_match:
+                    # Extract company name from pattern
+                    provider = provider_match[0].replace("\\b", "").replace("\\", "").strip()
+            if not buyer and classification.get("ai_companies_found"):
+                # Use first AI company as buyer
+                buyer_match = classification.get("ai_companies_found", [])
+                if buyer_match:
+                    buyer = buyer_match[0].replace("\\b", "").replace("\\", "").strip()
+        
+        # Still require at least one to be present
+        if not provider and not buyer:
             return None
+        
+        # Set inferred values
+        if provider:
+            canonical["provider"] = provider
+        if buyer:
+            canonical["buyer"] = buyer
         
         return canonical
     

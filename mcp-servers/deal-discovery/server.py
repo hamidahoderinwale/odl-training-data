@@ -25,7 +25,7 @@ except ImportError:
 from ingestion.scrapers.rss_scraper import RSSScraper
 from ingestion.scrapers.news_api_scraper import NewsAPIScraper
 from ingestion.scrapers.sec_scraper import SECScraper
-from ingestion.exa_deal_discovery import ExaDealDiscovery
+from ingestion.discovery.exa_deal_discovery import ExaDealDiscovery
 
 
 class DealDiscoveryMCPServer:

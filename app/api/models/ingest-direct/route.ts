@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAllPriorityModels } from '@/lib/priority-models'
-import { enrichModel } from '@/lib/model-enrichment'
+import { getAllPriorityModels } from '@/lib/api/priority-models'
+import { enrichModel } from '@/lib/api/model-enrichment'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 600 // 10 minutes

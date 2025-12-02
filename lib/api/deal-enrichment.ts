@@ -3,7 +3,7 @@
  * Infers missing deal metadata from existing fields
  */
 
-import { Deal } from '@/app/types/deal'
+import { Deal } from '@/lib/types/deal'
 
 // Partial Deal type for enrichment (only fields we need)
 type PartialDeal = Pick<Deal, 'dealType' | 'pricingMechanism' | 'reportedTerms' | 'date' | 'modality' | 'provider' | 'exclusive' | 'durationYears'>

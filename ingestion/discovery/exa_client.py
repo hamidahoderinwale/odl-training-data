@@ -6,6 +6,13 @@ import os
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 import requests
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+parent_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(parent_dir))
+
 from source_registry import EXA_SEARCH_QUERIES
 
 
@@ -58,6 +65,12 @@ class ExaClient:
             "query": query,
             "num_results": num_results,
             "use_autoprompt": True,  # Let Exa optimize the query
+            "contents": {
+                "text": {
+                    "max_characters": 2000,  # Get more context for better extraction
+                }
+            },
+            "highlights": True,  # Get highlighted snippets for better relevance
         }
         
         if start_published_date:

@@ -12,6 +12,9 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
+# Import date validation utilities
+from ingestion.pipeline.date_validator import validate_and_normalize_date, normalize_date
+
 # Note: Prisma Python client needs to be generated first
 # Run: npx prisma generate
 # Prisma Python client must be generated first: npx prisma generate
@@ -72,7 +75,7 @@ class DealDBWriter:
         if isinstance(sources, str):
             try:
                 sources = json.loads(sources)
-            except:
+            except (json.JSONDecodeError, TypeError):
                 sources = [sources] if sources else []
         elif not isinstance(sources, list):
             sources = [sources] if sources else []
@@ -94,9 +97,20 @@ class DealDBWriter:
         else:
             raw_snippets_json = raw_snippets
         
+        # Validate and normalize the main date field
+        raw_date = deal.get("date") or deal.get("date_announced")
+        validated_date = None
+        if raw_date:
+            is_valid, normalized, date_format, error = validate_and_normalize_date(raw_date)
+            if is_valid:
+                validated_date = normalized
+            else:
+                print(f"Warning: Invalid date format '{raw_date}': {error}")
+                # Keep original for now, but log warning
+        
         # Map to schema
         mapped = {
-            "date": deal.get("date") or deal.get("date_announced"),
+            "date": validated_date or raw_date,  # Use normalized if available, fallback to original
             "announcementDate": announcement_date,
             "effectiveStartDate": effective_start,
             "effectiveEndDate": effective_end,
@@ -263,10 +277,10 @@ class DealDBWriter:
                 return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
             # Try date only
             return datetime.strptime(date_str, "%Y-%m-%d")
-        except:
+        except (ValueError, TypeError):
             try:
                 # Try other formats
                 return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-            except:
+            except (ValueError, TypeError):
                 return None
 

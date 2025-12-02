@@ -1,9 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils/utils'
 import TokenCalculationCard from '@/app/components/models/TokenCalculationCard'
-import Tooltip from '@/app/components/Tooltip'
+import Tooltip from '@/app/components/ui/Tooltip'
 
 async function getModel(id: string) {
   const model = await prisma.modelRegistry.findUnique({

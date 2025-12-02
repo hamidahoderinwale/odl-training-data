@@ -104,10 +104,17 @@ class DealCanonicalizer:
         content_lower = content_type.lower().strip()
         return self.CONTENT_TYPE_MAP.get(content_lower, content_type)
     
-    def canonicalize_pricing_mechanism(self, mechanism: str) -> str:
+    def canonicalize_pricing_mechanism(self, mechanism: Any) -> str:
         """Canonicalize pricing mechanism"""
-        mechanism_lower = mechanism.lower().strip()
-        return self.PRICING_MECHANISM_MAP.get(mechanism_lower, mechanism)
+        # Handle dict case (from regex extractor)
+        if isinstance(mechanism, dict):
+            mechanism = mechanism.get("pricing_mechanism", "")
+        # Handle None or empty
+        if not mechanism:
+            return ""
+        # Convert to string and canonicalize
+        mechanism_str = str(mechanism).lower().strip()
+        return self.PRICING_MECHANISM_MAP.get(mechanism_str, mechanism_str)
     
     def canonicalize_deal(self, deal_data: Dict[str, Any]) -> Dict[str, Any]:
         """

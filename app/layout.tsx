@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Roboto_Mono } from 'next/font/google'
-import Sidebar from './components/Sidebar'
+import Sidebar from './components/ui/Sidebar'
 import './globals.css'
 
 const robotoMono = Roboto_Mono({ 

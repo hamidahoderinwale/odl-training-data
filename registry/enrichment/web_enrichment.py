@@ -171,11 +171,32 @@ class WebModelEnricher:
     def _build_search_queries(self, model_id: str, provider: str) -> List[str]:
         """Build search queries for model information"""
         queries = [
+            # Prioritize arXiv and company sites
+            f'site:arxiv.org "{model_id}" {provider} technical report',
+            f'site:arxiv.org "{model_id}" {provider} paper',
             f"{model_id} {provider} release date architecture training data",
             f"{model_id} {provider} system card technical details",
             f"{model_id} {provider} training dataset sources",
             f"{model_id} {provider} model card paper",
         ]
+        
+        # Add provider-specific queries targeting company sites
+        company_domains = {
+            "OpenAI": "openai.com",
+            "Anthropic": "anthropic.com",
+            "Google": "deepmind.com",
+            "Google DeepMind": "deepmind.com",
+            "Meta": "ai.meta.com",
+            "Microsoft": "microsoft.com",
+            "Mistral AI": "mistral.ai",
+            "Cohere": "cohere.com",
+            "xAI": "x.ai",
+        }
+        
+        domain = company_domains.get(provider)
+        if domain:
+            queries.insert(0, f'site:{domain} "{model_id}" release announcement')
+            queries.insert(1, f'site:{domain} "{model_id}" launch date')
         
         # Add provider-specific queries
         if provider.lower() in ["openai", "anthropic", "google", "meta"]:
@@ -217,4 +238,5 @@ class WebModelEnricher:
             "sources": [],
             "raw_evidence_snippets": [],
         }
+
 

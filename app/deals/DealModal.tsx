@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react'
 import DealFeed from '../components/deals/DealFeed'
-import { getSourceUrl } from '@/lib/utils'
-import type { Deal } from '@/app/types/deal'
-import Tooltip from '@/app/components/Tooltip'
+import { getSourceUrl } from '@/lib/utils/utils'
+import type { Deal } from '@/lib/types/deal'
+import Tooltip from '@/app/components/ui/Tooltip'
 
 interface DealModalProps {
   deal: Deal | null

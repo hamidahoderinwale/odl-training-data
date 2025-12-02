@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Tooltip from '@/app/components/Tooltip'
+import Tooltip from '@/app/components/ui/Tooltip'
 
 export default function NormalizationInfoBar() {
   const [isExpanded, setIsExpanded] = useState(false)

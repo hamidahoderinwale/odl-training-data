@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getExchangeRate } from '@/lib/currency'
+import { getExchangeRate } from '@/lib/utils/currency'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 3600 // Revalidate every hour

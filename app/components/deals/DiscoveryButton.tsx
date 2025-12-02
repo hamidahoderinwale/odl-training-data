@@ -11,7 +11,7 @@ export default function DiscoveryButton() {
 
   const handleDiscover = async () => {
     setIsDiscovering(true)
-    setStatus('Starting discovery... This may take several minutes.')
+    setStatus('Starting discovery... Searching 365 days back with 50+ Exa queries. This may take 5-10 minutes.')
     setResults(null)
 
     try {
@@ -19,7 +19,7 @@ export default function DiscoveryButton() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 600000) // 10 minutes
 
-      const response = await fetch('/api/discover?source=all&days_back=7', {
+      const response = await fetch('/api/discover?source=exa&days_back=365', {
         method: 'POST',
         signal: controller.signal,
       })

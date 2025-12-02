@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { convertCurrency, extractDateForConversion } from '@/lib/currency'
+import { convertCurrency, extractDateForConversion } from '@/lib/utils/currency'
 
 async function getDealsForNormalization() {
   const deals = await prisma.deal.findMany({

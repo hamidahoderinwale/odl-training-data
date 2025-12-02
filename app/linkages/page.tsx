@@ -71,8 +71,8 @@ export default async function LinkagesPage() {
             <details className="group">
               <summary className="cursor-pointer list-none flex items-center justify-between">
                 <h2 className="text-lg font-semibold">How Linkages Work</h2>
-                <span className="text-text-muted text-sm group-open:hidden">Click to expand</span>
-                <span className="text-text-muted text-sm hidden group-open:inline">Click to collapse</span>
+                <span className="text-text-muted text-sm group-open:hidden">▼</span>
+                <span className="text-text-muted text-sm hidden group-open:inline">▲</span>
               </summary>
               <div className="mt-3 pt-3 border-t border-border-subtle space-y-3 text-sm text-text-muted">
                 <div>
@@ -123,3 +123,7 @@ export default async function LinkagesPage() {
         ) : (
           <LinkagesClient initialLinkages={linkages.filter(l => l && l.deal && l.model)} />
         )}
+      </div>
+    </main>
+  )
+}
