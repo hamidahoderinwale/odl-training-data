@@ -5,7 +5,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     ports:
       - "3000:3000"
     environment:
@@ -25,7 +25,7 @@ services:
   python-services:
     build:
       context: .
-      dockerfile: Dockerfile.python
+      dockerfile: docker/Dockerfile.python
     volumes:
       - .:/app
     environment:

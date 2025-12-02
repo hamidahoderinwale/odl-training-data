@@ -44,7 +44,7 @@ The easiest way to get started is using Docker:
 
 ```bash
 # Development with hot reload
-docker-compose -f docker-compose.dev.yml up --build
+docker-compose -f docker/docker-compose.dev.yml up --build
 
 # Access at http://localhost:3000
 ```
@@ -77,7 +77,6 @@ docker-compose -f docker-compose.dev.yml up --build
    
    **Note**: The Python Prisma client is optional. Model ingestion works automatically via direct Prisma access.
    
-   **Troubleshooting**: If `npm run setup` fails with "prisma-client-py: command not found", this is expected. The Python Prisma client generation is optional. Just run `npm run db:generate` instead to generate the Node.js client, which is sufficient for the web application.
 
 3. **Initialize database:**
    ```bash
@@ -87,32 +86,19 @@ docker-compose -f docker-compose.dev.yml up --build
 
 4. **Configure API keys** (create `.env` file in project root):
    
-   Create a `.env` file in the project root with the following variables:
-   ```bash
-   # Database (required)
-   DATABASE_URL=file:./prisma/dev.db
+   Copy `.env.example` as a template: `cp config/.env.example .env`
    
-   # Exa API (recommended for deal discovery)
-   # Get your API key from: https://exa.ai/
-   # Exa provides AI-powered search for finding deal announcements
-   EXA_API_KEY=your_exa_api_key_here
+   **Required:**
+   - `DATABASE_URL=file:./prisma/dev.db` (SQLite database path)
    
-   # News API (optional)
-   # Get your API key from: https://newsapi.org/
-   NEWS_API_KEY=your_news_api_key_here
+   **Recommended:**
+   - `EXA_API_KEY` - Primary discovery engine (get from https://exa.ai/)
    
-   # Perplexity API (optional)
-   # Get your API key from: https://www.perplexity.ai/
-   # Used for AI-powered feed acquisition
-   PERPLEXITY_API_KEY=your_perplexity_api_key_here
-   ```
+   **Optional:**
+   - `NEWS_API_KEY` - Additional news source (get from https://newsapi.org/)
+   - `PERPLEXITY_API_KEY` - AI-powered feed (get from https://www.perplexity.ai/)
    
-   **Note**: 
-   - `DATABASE_URL` is required (use `file:./prisma/dev.db` for SQLite)
-   - `EXA_API_KEY` is **highly recommended** - it's the primary discovery engine
-   - `NEWS_API_KEY` and `PERPLEXITY_API_KEY` are optional but enable additional discovery sources
-   - RSS feeds work without any API keys (uses public RSS feeds from OpenAI, Google, Anthropic, Meta blogs)
-   - You can copy `.env.example` as a template: `cp .env.example .env`
+   **Note**: RSS feeds work without any API keys (uses public RSS feeds from OpenAI, Google, Anthropic, Meta blogs). See "Getting the Exa/RSS Discovery Engine Running" section below for detailed setup.
 
 5. **Start development server:**
    ```bash
@@ -206,6 +192,16 @@ npm run pipeline:monitor
 ## Project Structure
 
 ```
+├── config/                 # Configuration files
+│   ├── .env.example       # Environment variables template
+│   ├── .eslintrc.json     # ESLint configuration (also at root for Next.js)
+│   ├── .prettierrc        # Prettier configuration
+│   └── vercel.json        # Vercel deployment config
+├── docker/                 # Docker configuration
+│   ├── Dockerfile          # Production Docker image
+│   ├── Dockerfile.dev      # Development Docker image
+│   ├── docker-compose.yml # Production compose config
+│   └── docker-compose.dev.yml # Development compose config
 ├── app/                    # Next.js App Router
 │   ├── api/               # API routes (deals, models, linkages, currency)
 │   │   ├── deals/         # Deal-related endpoints
@@ -301,72 +297,32 @@ npm run pipeline:monitor
 - `npm run registry:enrich-dates` - Enrich model release dates
 - `npm run registry:enrich-dates:all` - Enrich all model release dates
 
-### Setup for Automation
-
-#### Getting the Exa/RSS Discovery Engine Running
+### Getting the Discovery Engine Running
 
 **RSS Feeds (No API Key Required)**
-- RSS discovery works immediately without any setup
+- Works immediately without any setup
 - Uses public RSS feeds from major AI companies (OpenAI, Google, Anthropic, Meta blogs)
-- Configured in `ingestion/scrapers/rss_scraper.py`
+- Test: `cd ingestion && python3 monitor.py --days-back 1 --source rss`
 
 **Exa API (Recommended - Primary Discovery Engine)**
-1. **Get an Exa API key:**
-   - Sign up at https://exa.ai/
-   - Navigate to your API settings/dashboard
-   - Copy your API key
-
-2. **Add to `.env` file** (create in project root if it doesn't exist):
+1. Get API key from https://exa.ai/ and add `EXA_API_KEY` to `.env`
+2. Test discovery:
    ```bash
-   EXA_API_KEY=your_actual_exa_api_key_here
-   DATABASE_URL=file:./prisma/dev.db
+   npm run discover        # Exa only (90 days back)
+   npm run discover:all    # All sources (Exa + RSS + News API + SEC)
+   bash scripts/discover-deals.sh 90 exa    # Custom: 90 days, Exa only
    ```
+3. Verify: Check terminal output, web interface at http://localhost:3000, or `npm run db:studio`
 
-3. **Test the discovery engine:**
-   ```bash
-   # Discover deals from Exa (90 days back)
-   npm run discover
-   
-   # Or discover from all sources (Exa + RSS + News API + SEC)
-   npm run discover:all
-   
-   # Or use the script directly with custom parameters
-   bash scripts/discover-deals.sh 90 exa    # 90 days, Exa only
-   bash scripts/discover-deals.sh 90 all    # 90 days, all sources
-   ```
+**Optional APIs** (enhance discovery but not required):
+- `NEWS_API_KEY` - NewsAPI integration (get from https://newsapi.org/)
+- `PERPLEXITY_API_KEY` - AI-powered feed (get from https://www.perplexity.ai/)
 
-4. **Verify it's working:**
-   - Check the terminal output for discovery results
-   - New deals will appear in the web interface at http://localhost:3000
-   - You can also check the database using `npm run db:studio`
-
-5. **Test RSS discovery (no API key required):**
-   ```bash
-   # Test RSS feeds only (works without any API keys)
-   cd ingestion
-   source ../venv/bin/activate  # or activate your Python environment
-   python3 monitor.py --days-back 1 --source rss
-   ```
-
-**Other Optional APIs:**
-- **News API**: Get key from https://newsapi.org/ (add `NEWS_API_KEY` to `.env`)
-- **Perplexity API**: Get key from https://www.perplexity.ai/ (add `PERPLEXITY_API_KEY` to `.env`)
-
-#### Full Automation Setup
-1. **Install Python dependencies**: 
-   ```bash
-   cd ingestion
-   pip install -r requirements.txt
-   ```
-2. **Generate Prisma client** (required for database operations):
-   ```bash
-   npm run db:generate
-   ```
-3. **Configure API keys** in `.env` (see above for details)
-4. **Set up cron job** for daily monitoring: 
-   ```bash
-   0 2 * * * cd /path/to/project && python ingestion/monitor.py
-   ```
+**Automation Setup:**
+Set up cron job for daily monitoring:
+```bash
+0 2 * * * cd /path/to/project && python ingestion/monitor.py
+```
 
 ## Automation Pipeline
 
@@ -380,11 +336,11 @@ The system includes a complete automated deal discovery and extraction pipeline:
 5. **Deduplication**: Merge duplicate deals from multiple sources
 
 ### Discovery Sources
-- **RSS Feeds**: Press releases, company blogs
-- **News APIs**: NewsAPI integration
+- **RSS Feeds**: Press releases, company blogs (no API key required)
+- **Exa Discovery**: AI-powered URL discovery (recommended, requires API key)
+- **News APIs**: NewsAPI integration (optional)
 - **SEC Filings**: SEC EDGAR framework
-- **Exa Discovery**: AI-powered URL discovery
-- **Perplexity Feed**: AI-powered feed acquisition (similar to [briefing.commonknowled.ge](https://briefing.commonknowled.ge/)) - uses Perplexity API to intelligently search for deal-related content
+- **Perplexity Feed**: AI-powered feed acquisition (optional, similar to [briefing.commonknowled.ge](https://briefing.commonknowled.ge/))
 
 ### Features
 - **Deal Classification**: Keyword-based filtering to detect AI data licensing deals
@@ -394,16 +350,11 @@ The system includes a complete automated deal discovery and extraction pipeline:
 
 ### Usage
 
-**Quick Start (Recommended):**
+**Command Line:**
 ```bash
-# Discover deals from Exa API (90 days back, optimized queries)
-npm run discover
-
-# Discover from all sources (Exa, RSS, News API, etc.)
-npm run discover:all
-
-# Or use the script directly
-bash scripts/discover-deals.sh 90 exa
+npm run discover        # Exa only (90 days back)
+npm run discover:all     # All sources
+bash scripts/discover-deals.sh 90 exa    # Custom parameters
 ```
 
 **Python API:**
@@ -494,14 +445,14 @@ The `/api/mcp/deals` endpoint uses Python scripts (`add_deal.py`) that provide t
 
 ## Troubleshooting
 
-### Python Prisma Client Generation Fails
-If you see `prisma-client-py: command not found` during setup:
-- This is expected - the Python Prisma client is optional
-- Run `npm run db:generate` instead (generates Node.js client only)
-- The web application works fine without the Python Prisma client
-- Python scripts can access the database directly via Prisma
+### Common Issues
 
-### Discovery Engine Not Finding Deals
+**Python Prisma Client Generation Fails:**
+- If you see `prisma-client-py: command not found` during setup, this is expected
+- The Python Prisma client is optional - run `npm run db:generate` instead
+- The web application works fine without it; Python scripts access the database directly
+
+**Discovery Engine Not Finding Deals:**
 - **RSS feeds**: Should work immediately without API keys. Test with `python ingestion/monitor.py --source rss --days-back 1`
 - **Exa API**: Verify your `EXA_API_KEY` is set correctly in `.env` file
 - **Check logs**: Look at terminal output for error messages
