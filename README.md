@@ -1,3 +1,11 @@
+---
+title: AI Training Data Deals
+sdk: docker
+app_port: 3000
+pinned: false
+license: mit
+---
+
 # AI Training Data Deals Dashboard
 
 A system for tracking AI training data licensing deals with automated discovery and extraction.

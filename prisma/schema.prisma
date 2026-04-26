@@ -5,9 +5,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator python {
-  provider = "prisma-client-py"
-}
+// Python generator disabled — prisma-client-py is optional and not installed in this env.
+// generator python {
+//   provider = "prisma-client-py"
+// }
 
 datasource db {
   provider = "sqlite" // Start with SQLite for MVP, easy migration to Postgres later

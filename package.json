@@ -11,6 +11,7 @@
     "setup:python": "cd registry && python3 -m prisma generate 2>/dev/null || echo 'Python Prisma client generation skipped (optional)' && cd ..",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:hf": "tsx prisma/seed_from_hf.ts",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "pipeline:monitor": "cd ingestion && python monitor.py",

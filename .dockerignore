@@ -12,9 +12,16 @@ __pycache__
 *.egg-info
 dist
 build
+
+# Env files — configure via container ENV / HF Spaces Secrets, never bake in
+.env
 .env.local
 .env.*.local
-.DS_Store
+
+# Local SQLite — the image seeds its own dev.db at build time
+*.db
+*.db-journal
+
 *.log
 .git
 .gitignore
@@ -23,4 +30,4 @@ docker-compose.yml
 Dockerfile
 Dockerfile.python
 .dockerignore
-
+.DS_Store

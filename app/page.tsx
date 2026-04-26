@@ -6,7 +6,15 @@ import NormalizationInfoBar from './components/deals/NormalizationInfoBar'
 import ProgressBar from './components/ui/ProgressBar'
 import AutoEnrich from './components/deals/AutoEnrich'
 import Tooltip from './components/ui/Tooltip'
+import SupplyChainSankey from './components/deals/SupplyChainSankey'
+import DisclosurePanel from './components/deals/DisclosurePanel'
+import CumulativeTimeStrip from './components/deals/CumulativeTimeStrip'
 import { enrichDeal } from '@/lib/api/deal-enrichment'
+import {
+  buildSankey,
+  buildDisclosure,
+  buildTimeSeries,
+} from '@/lib/api/supply-chain-analytics'
 
 async function getDeals() {
   const deals = await prisma.deal.findMany({
@@ -78,7 +86,20 @@ async function getDeals() {
 }
 
 async function getAnalytics() {
-  const deals = await prisma.deal.findMany()
+  const deals = await prisma.deal.findMany({
+    select: {
+      buyer: true,
+      provider: true,
+      modality: true,
+      date: true,
+      priceUsd: true,
+      priceRangeMinUsd: true,
+      priceRangeMaxUsd: true,
+      exclusive: true,
+      creatorsCompensated: true,
+      extractionMetadata: true,
+    },
+  })
 
   // Calculate stats
   const totalDeals = deals.length
@@ -142,6 +163,11 @@ async function getAnalytics() {
     .slice(0, 5)
     .map(([name, spend]) => ({ name, spend, count: providerCounts[name] }))
 
+  // Supply-chain views — Sankey, disclosure, cumulative time strip
+  const sankey = buildSankey(deals)
+  const disclosure = buildDisclosure(deals)
+  const timeSeries = buildTimeSeries(deals)
+
   return {
     totalDeals,
     totalSpend,
@@ -151,6 +177,9 @@ async function getAnalytics() {
     modalityCounts,
     topBuyers,
     topProviders,
+    sankey,
+    disclosure,
+    timeSeries,
   }
 }
 
@@ -291,6 +320,13 @@ export default async function Home() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Supply-chain views */}
+        <div className="space-y-4 mb-8">
+          <DisclosurePanel data={analytics.disclosure} />
+          <CumulativeTimeStrip data={analytics.timeSeries} />
+          <SupplyChainSankey data={analytics.sankey} />
         </div>
 
         {/* Deals Explorer */}

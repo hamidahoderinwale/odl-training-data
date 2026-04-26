@@ -52,7 +52,7 @@ export default function AutoEnrich({ modelCount, modelsWithTokens }: AutoEnrichP
   }
 
   return (
-    <div className="mb-6 card border-l-[3px] border-accent">
+    <div className="mb-6 card">
       <div className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="text-accent text-xl animate-spin">⟳</div>

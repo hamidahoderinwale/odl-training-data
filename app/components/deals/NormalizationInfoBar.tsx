@@ -7,7 +7,7 @@ export default function NormalizationInfoBar() {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <div className="card mb-6 border-l-[3px] border-accent">
+    <div className="card mb-6">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between px-4 py-2 text-left hover:bg-[rgba(232,225,217,0.1)] transition-colors"
