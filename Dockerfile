@@ -2,12 +2,17 @@
 # Builder seeds SQLite from the bundled JSONL so the image ships ready-to-serve
 # (HF Spaces free tier has ephemeral storage; baking the DB into the image is
 # faster and lets Next.js pre-render with real data).
+#
+# Base: node:20-slim (Debian) rather than alpine — Prisma's officially supported
+# Linux platform, ships with OpenSSL 3, no libssl detection mismatches.
 
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openssl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
@@ -42,8 +47,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Must match builder so Prisma reads the dev.db that was just seeded
 ENV DATABASE_URL=file:./prisma/dev.db
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs \
+ && useradd --system --uid 1001 --gid 1001 --shell /bin/sh nextjs
 
 # Copy necessary files from the standalone build.
 # `prisma/` needs to be owned by `nextjs` so SQLite can write journal/WAL
